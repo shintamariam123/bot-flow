@@ -1,0 +1,130 @@
+{
+    "custom_fields_list":[
+         {
+             "id": 1,
+             "name": "#fname#",
+             "type": "TEXT"
+         },
+         {
+             "id": 2,
+             "name": "#mark#",
+             "type": "TEXT"
+         },
+         {
+             "id": 3,
+             "name": "#phonenumber#",
+             "type": "TEXT"
+         }
+     ],
+    "system_fields_list":[
+         {
+             "full_name": "#first_name last_name#"
+         }
+     ],
+    "group_label_list":[
+         {
+             "id": 1,
+             "label_name": "senscript"
+         },
+         {
+             "id": 2,
+             "label_name": "BGTestNumbers"
+         },
+         {
+             "id": 3,
+             "label_name": "test"
+         }
+    ],
+    "sequence_list":[
+         {
+             "id": 1,
+             "campaign_name": "test123",
+             "campaign_status": "PENDING"
+         },
+         {
+             "id": 2,
+             "campaign_name": "test",
+             "campaign_status": "PENDING"
+         },
+         {
+             "id": 3,
+             "campaign_name": "xz",
+             "campaign_status": "PENDING"
+         }
+     ],
+    "agent_list": 
+    [
+        {
+        "id": 13,
+         "name": "Akhila Antony"
+         }, 
+         {
+            "id": 19, 
+            "name": "Aravind"
+        }, 
+        {
+            "id": 11, 
+            "name": "bgsoft"
+        }
+    ],
+    "whatsapp_flow_list":[
+         {
+             "id": 1,
+             "flow_id": 880603870104756,
+             "name": "fnlflow"
+         },
+         {
+             "id": 2,
+             "flow_id": 391989997336994,
+             "name": "resetbtn"
+         },
+         {
+             "id": 3,
+             "flow_id": 1459915361168059,
+             "name": "submitbtn"
+         }
+     ],
+    "input_flow_list":[
+         {
+             "id": 1,
+             "name": "inpFlowTest"
+         },
+         {
+             "id": 2,
+             "name": "abhi input"
+         },
+         {
+             "id": 3,
+             "name": "test"
+         }
+     ],
+    "template_canvas_message":[
+         {
+             "id": 1, 
+             "template_name": "aboutbgsoft", 
+             "header_type": "TEXT", 
+             "custom_count": 0, 
+             "button_type": "", 
+             "buttons": [], 
+             "button_count": 0
+         },
+         {
+             "id": 2, 
+             "template_name": "aboutwabee", 
+             "header_type": "TEXT", 
+             "custom_count": 0, 
+             "button_type": "", 
+             "buttons": [], 
+             "button_count": 0
+         }, 
+         {
+             "id": 3, 
+             "template_name": "bg_bot_intro", 
+             "header_type": "TEXT", 
+             "custom_count": 0, 
+             "button_type": "QUICK_REPLY", 
+             "buttons": ["About Wabee", "About BGSOFT", "Contact Details"], 
+             "button_count": 3
+         }
+     ]
+ }
