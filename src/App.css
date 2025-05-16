@@ -1,0 +1,150 @@
+* {
+    padding: 0px;
+    margin: 0px;
+    box-sizing: border-box !important;
+}
+
+.main {
+    width: 100vw;
+    height: 100vh;
+    background-color: #e8e4e4;
+     overflow: hidden;
+  position: relative;
+}
+
+.button-div {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 30px !important;
+  background-color: #fff;
+}
+
+.btn-box {
+  display: flex;
+  flex-wrap: nowrap; 
+  align-items: center;
+}
+
+.btn-box .btn {
+  width: 47px;
+  height: 47px;
+  border-radius: 100%;
+  margin-right: 6px !important;
+  border: 1px dotted rgb(94, 94, 145);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.save-btn {
+  background-color: green !important;
+    width: 80px !important;
+    height: 40px !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+}
+
+
+@media (max-width: 768px) {
+    .button-div {
+        flex-wrap: wrap;
+    }
+
+}
+
+/* .content {
+    padding: 30px;
+  height: 100vh;
+  position: relative !important; 
+  overflow: hidden !important;
+} */
+
+.content {
+   
+ box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+     border-radius: 20px !important;
+     background-color: #fff;
+
+}
+.default-heading{
+  font-size: 8px;
+  font-weight: 500;
+}
+.offcanvas-body::-webkit-scrollbar {
+  display: none;
+}
+.canvas-div::-webkit-scrollbar {
+  display: none;
+}
+
+.bot_flow p{
+    font-size: 6px;
+    color: grey;
+}
+.compose{
+    font-size: 10px;
+}
+.saved-info p{
+    font-size: 5px !important;
+    line-height: 1px;
+}
+
+
+.heading {
+    font-size: 10px;
+    font-weight: 500;
+}
+input{
+    width: 350px !important;
+    height: 45px;
+    border-radius: 5px;
+    border: 1px solid #cfcbcb;
+      padding-left: 10px;
+}
+.offcanvas-body::-webkit-scrollbar {
+  display: none;
+}
+.offcanva-div::-webkit-scrollbar{
+  display: none;
+}
+.offcanvas-body button{
+    width: 175px;
+      height: 60px;
+    border-radius: 5px;
+    border: 1px solid #cfcbcb;
+}
+.offcanvas-body select{
+       width: 350px;
+      height: 40px;
+    border-radius: 5px;
+    border: 1px solid #cfcbcb;
+    padding-left: 10px;
+}
+.no-arrow {
+  -webkit-appearance: none; 
+  -moz-appearance: none;     
+  appearance: none;          
+  
+}
+
+ .offcanvas-save{
+width: 170px !important;
+background-color: green !important;
+color: #fff !important;
+}
+.text-save{
+width: 100px !important;
+background-color: green !important;
+color: #fff !important;
+}
+.offcanvas-close{
+width: 100px !important;
+background-color: red !important;
+color: #fff !important;
+}
+.text-btn{
+  border: 1px solid aqua;
+}
+
