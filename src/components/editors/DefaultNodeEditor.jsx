@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaCog, FaUser } from 'react-icons/fa';
+import optionsData from './js-data/optionsData.json'
 
 const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap }) => {
   if (!node) return null;
@@ -17,6 +18,26 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
   // Image node state
   const [imagePreview, setImagePreview] = useState(null);
 
+  // Audio node state
+  const [audioPreview, setAudioPreview] = useState(null);
+
+  // Video
+  const [videoPreview, setVideoPreview] = useState(null);
+
+  // File
+  const [filePreview, setFilePreview] = useState(null);
+
+  // location
+const [locationText, setLocationText] = useState('');
+
+
+  // WhatsApp Flow
+  const [flowType, setFlowType] = useState('');
+  const [field1, setField1] = useState('');
+  const [field2, setField2] = useState('');
+  const [field3, setField3] = useState('');
+  const [field4, setField4] = useState('');
+
   // Shared delay
   const [delay, setDelay] = useState(0);
 
@@ -26,10 +47,10 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
 
     const content = nodeContentMap[node.id];
     if (!content) {
-      // Reset to defaults if no content
-      setMessageType((prev) => prev || 'Custom'); // Only reset if not set
+      setMessageType((prev) => prev || 'Custom');
       setText('');
       setImagePreview(null);
+      setAudioPreview(null);
       setDelay(0);
       return;
     }
@@ -41,9 +62,29 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
     } else if (content.type === 'Image') {
       setImagePreview(content.image || null);
       setDelay(content.delay || 0);
+    } else if (content.type === 'Audio') {
+      setAudioPreview(content.audio || null);
+      setDelay(content.delay || 0);
+    } else if (content.type === 'Video') {
+      setVideoPreview(content.video || null);
+      setDelay(content.delay || 0);
+    } else if (content.type === 'File') {
+      setFilePreview(content.file || null);
+      setDelay(content.delay || 0);
+    } else if (content.type === 'Location') {
+      setLocationText(content.text || null);
+      setDelay(content.delay || 0);
+    } else if (content.type === 'WhatsappFlow') {
+      setFlowType(content.flowType || '');
+      setField1(content.field1 || '');
+      setField2(content.field2 || '');
+      setField3(content.field3 || '');
+      setField4(content.field4 || '');
+      setDelay(content.delay || 0);
     }
-  }, [node?.id]);
 
+
+  }, [node?.id]);
 
 
   // Handle inserting variables into text
@@ -57,7 +98,7 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
     setShowDropdown(false);
   };
 
-  const handleImageUpload = (file) => {
+  const handleImageUpload = async (file) => {
     if (!file) return;
 
     const isImage = file.type === 'image/png' || file.type === 'image/jpeg';
@@ -66,12 +107,139 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
+    // Upload the file to your backend or cloud storage
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/upload-media', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.fileUrl) {
+        const fullUrl = `http://localhost:3000${data.fileUrl}`;
+        console.log("Image uploaded:", fullUrl);
+        setImagePreview(fullUrl);  // Or whatever state you're using
+      } else {
+        console.error("Upload response error", data);
+      }
+
+
+    } catch (error) {
+      console.error('Upload failed', error);
+    }
   };
+
+  const handleAudioUpload = async (file) => {
+    if (!file) return;
+
+    const isAudio = ['audio/mpeg', 'audio/wav', 'audio/mp3'].includes(file.type);
+    if (!isAudio) {
+      alert('Only MP3 and WAV audio files are supported.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/upload-media', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.fileUrl) {
+        const fullUrl = `http://localhost:3000${data.fileUrl}`;
+        console.log("Audio uploaded:", fullUrl);
+        setAudioPreview(fullUrl);
+      } else {
+        console.error("Upload response error", data);
+      }
+    } catch (error) {
+      console.error('Audio upload failed', error);
+    }
+  };
+
+
+  const handleVideoUpload = async (file) => {
+    if (!file) return;
+
+    const isVideo = ['video/mp4', 'video/x-flv', 'video/x-ms-wmv'].includes(file.type);
+    if (!isVideo) {
+      alert('Only MP4, FLV, and WMV video files are supported.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/upload-media', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.fileUrl) {
+        const fullUrl = `http://localhost:3000${data.fileUrl}`;
+        console.log("Video uploaded:", fullUrl);
+        setVideoPreview(fullUrl);
+      } else {
+        console.error("Upload response error", data);
+      }
+    } catch (error) {
+      console.error('Video upload failed', error);
+    }
+  };
+
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+
+    const supportedTypes = [
+      'application/msword',                           // .doc
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+      'application/pdf',                              // .pdf
+      'application/vnd.ms-powerpoint',                // .ppt
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
+      'application/vnd.ms-excel',                     // .xls
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'         // .xlsx
+    ];
+
+    if (!supportedTypes.includes(file.type)) {
+      alert('Only DOC, DOCX, PDF, PPT, PPTX, XLS, and XLSX files are supported.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://localhost:3000/api/upload-media', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (data.fileUrl) {
+        const fullUrl = `http://localhost:3000${data.fileUrl}`;
+        console.log("File uploaded:", fullUrl);
+        setFilePreview({
+          name: file.name,
+          url: fullUrl,
+          type: file.type,
+        });
+      } else {
+        console.error("Upload response error", data);
+      }
+    } catch (error) {
+      console.error('File upload failed', error);
+    }
+  };
+
 
   const handleSaveContent = (content) => {
     if (!node?.id) return;
@@ -87,11 +255,16 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
     onClose();
   };
 
+  const saveOrUpdateMedia = (mediaType, mediaContent) => {
+    handleSaveContent({
+      type: mediaType,
+      [mediaType.toLowerCase()]: mediaContent,
+      delay
+    });
+  };
+
   return (
-    <div style={{
-      position: 'fixed', right: 0, top: 0, height: '100%', width: 400,
-      background: '#fff', borderLeft: '1px solid #ccc', padding: 20, zIndex: 9999
-    }}>
+    <div className='editor p-3' >
       <h4>{type} Node Editor</h4>
 
       {/* Text Node */}
@@ -123,7 +296,7 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
                   width: '150px',
                   zIndex: 1000
                 }}>
-                  {['Custom', 'Plain Text', 'Template', 'Dynamic Field'].map((option) => (
+                  {['#fname#', '#mark#', '#phonenumber#'].map((option) => (
                     <li
                       key={option}
                       onClick={() => handleDropdownSelect(option)}
@@ -175,7 +348,15 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
           />
 
           <div className='mt-4 d-flex justify-content-end'>
-            <button className='btn offcanvas-close me-2' onClick={onClose}>Close</button>
+            <button
+              className='btn offcanvas-close me-2'
+              onClick={() => {
+
+                onClose();
+              }}
+            >
+              Close
+            </button>
             <button className='btn text-save' onClick={() => handleSaveContent({
               type: 'Text',
               messageType,
@@ -185,7 +366,6 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
           </div>
         </div>
       )}
-
       {/* Image Node */}
       {type === 'Image' && (
         <div>
@@ -240,22 +420,353 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
           />
 
           <div className='mt-4 d-flex justify-content-end'>
-            <button className='btn offcanvas-close me-2' onClick={onClose}>Close</button>
+            <button
+              className='btn offcanvas-close me-2'
+              onClick={() => {
+                onClose();
+              }}
+            >
+              Close
+            </button>
+            <button className='btn text-save' onClick={() => saveOrUpdateMedia('Image', imagePreview)}>Save</button>
+          </div>
+        </div>
+      )}
+      {/* YouTube Node Placeholder */}
+      {type === 'Video' && (
+        <div>
+          <p>Configure Video</p>
+
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files[0];
+              handleVideoUpload(file);
+            }}
+            onClick={() => document.getElementById('videoInput').click()}
+            style={{
+              border: '2px dashed #ccc',
+              borderRadius: '8px',
+              padding: '20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              marginBottom: '15px'
+            }}
+          >
+            <p>🎥 Drop video file here or click to upload</p>
+            <p><small>Only .mp4, .flv, and .wmv files supported</small></p>
+            <input
+              id="videoInput"
+              type="file"
+              accept=".mp4,.flv,.wmv,video/*"
+              style={{ display: 'none' }}
+              onChange={(e) => handleVideoUpload(e.target.files[0])}
+            />
+            {videoPreview && (
+              <div style={{ marginTop: '10px' }}>
+                <video controls style={{ maxWidth: '100%', maxHeight: '200px' }}>
+                  <source src={videoPreview} />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            )}
+
+          </div>
+
+          <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            step={1}
+            value={delay}
+            onChange={(e) => setDelay(parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+
+          <div className='mt-4 d-flex justify-content-end'>
+            <button
+              className='btn offcanvas-close me-2'
+              onClick={() => {
+                onClose();
+              }}
+            >
+              Close
+            </button>
+            <button className='btn text-save' onClick={() => saveOrUpdateMedia('Video', videoPreview)}>Save</button>
+          </div>
+        </div>
+      )}
+      {/* audio */}
+      {type === 'Audio' && (
+        <div>
+          <p>Configure Audio</p>
+
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files[0];
+              handleAudioUpload(file);
+            }}
+            onClick={() => document.getElementById('audioInput').click()}
+            style={{
+              border: '2px dashed #ccc',
+              borderRadius: '8px',
+              padding: '20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              marginBottom: '15px'
+            }}
+          >
+            <p>🎙️ Drop audio file here or click to upload</p>
+            <p><small>Only .mp3 or .wav files supported</small></p>
+            <input
+              id="audioInput"
+              type="file"
+              accept=".mp3,.wav,audio/*"
+              style={{ display: 'none' }}
+              onChange={(e) => handleAudioUpload(e.target.files[0])}
+            />
+            {audioPreview && (
+              <div style={{ marginTop: '10px' }}>
+                <audio controls src={audioPreview} style={{ width: '100%' }} />
+              </div>
+            )}
+          </div>
+
+          <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            step={1}
+            value={delay}
+            onChange={(e) => setDelay(parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+
+          <div className='mt-4 d-flex justify-content-end'>
+            <button
+              className='btn offcanvas-close me-2'
+              onClick={() => {
+                onClose();
+              }}
+            >
+              Close
+            </button>
+            <button className='btn text-save' onClick={() => saveOrUpdateMedia('Audio', audioPreview)}>Save</button>
+          </div>
+        </div>
+      )}
+      {/* file */}
+      {type === 'File' && (
+        <div>
+          <p>Configure File</p>
+
+          <div
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const file = e.dataTransfer.files[0];
+              handleFileUpload(file);
+            }}
+            onClick={() => document.getElementById('fileUploadInput').click()}
+            style={{
+              border: '2px dashed #ccc',
+              borderRadius: '8px',
+              padding: '20px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              marginBottom: '15px'
+            }}
+          >
+            <p>📤 Drop file here or click to upload</p>
+            <p><small>Only .doc, .docx, .pdf, .ppt, .pptx, .xls, .xlsx files supported</small></p>
+
+            <input
+              id="fileUploadInput"
+              type="file"
+              accept=".doc,.docx,.pdf,.ppt,.pptx,.xls,.xlsx,application/*"
+              style={{ display: 'none' }}
+              onChange={(e) => handleFileUpload(e.target.files[0])}
+            />
+
+            {filePreview && (
+              <div style={{ marginTop: '10px' }}>
+                <p><strong>{filePreview.name}</strong></p>
+                <a href={filePreview.url} download target="_blank" rel="noreferrer">Download</a>
+              </div>
+            )}
+          </div>
+
+          <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            step={1}
+            value={delay}
+            onChange={(e) => setDelay(parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+
+          <div className='mt-4 d-flex justify-content-end'>
+            <button
+              className='btn offcanvas-close me-2'
+              onClick={() => {
+
+                onClose();
+              }}
+            >
+              Close
+            </button>
+            <button className='btn text-save' onClick={() => saveOrUpdateMedia('File', filePreview)}>Save</button>
+          </div>
+        </div>
+      )}
+      {/* location */}
+      {type === 'Location' && (
+        <div>
+          <p>Please provide body text*</p>
+
+          <textarea
+            rows={4}
+            type='text'
+            style={{ width: '100%', marginBottom: '10px' }}
+            placeholder="Type your reply..."
+            value={locationText}
+            onChange={(e) => setLocationText(e.target.value)}
+          />
+
+          <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>
+          <input
+            type="range"
+            min={0}
+            max={30}
+            step={1}
+            value={delay}
+            onChange={(e) => setDelay(parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+
+          <div className='mt-4 d-flex justify-content-end'>
+            <button
+              className='btn offcanvas-close me-2'
+              onClick={() => {
+
+                onClose();
+              }}
+            >
+              Close
+            </button>
             <button className='btn text-save' onClick={() => handleSaveContent({
-              type: 'Image',
-              image: imagePreview,
+              type: 'Location',
+              text:locationText,
               delay
             })}>Save</button>
           </div>
         </div>
       )}
-
-      {/* YouTube Node Placeholder */}
-      {type === 'YouTube' && (
+      {/* Whatsapp */}
+      {type === 'Whatsapp' && (
         <div>
-          <p>This is the YouTube Node Editor</p>
+          <p>Configure WhatsApp Flow</p>
+
+          {/* Dropdown */}
+          <div className="mb-2">
+            <label htmlFor="flowType" className="form-label">Flow Type</label>
+            <select
+              id="flowType"
+              className="form-select"
+              value={flowType}
+              onChange={(e) => setFlowType(e.target.value)}
+            >
+              <option value="" disabled hidden>Select Flow Type</option>
+              {optionsData.whatsapp_flow_list.map((label) => (
+                <option key={label.id} value={label.name}>{label.name}</option>
+
+              ))}
+
+            </select>
+          </div>
+
+          {/* Input Fields */}
+          <div className="mb-2 d-flex flex-column">
+            <label htmlFor="field1" className="form-label">Message Header*</label>
+            <input
+              type="text"
+
+              id="field1"
+              value={field1}
+              onChange={(e) => setField1(e.target.value)}
+            />
+          </div>
+
+          <div className="mb-2 d-flex flex-column">
+            <label htmlFor="field2" className="form-label">Message Body*</label>
+            <textarea
+              type="text"
+              rows={4}
+
+              id="field2"
+              value={field2}
+              onChange={(e) => setField2(e.target.value)}
+
+            />
+          </div>
+
+          <div className="mb-2 d-flex flex-column">
+            <label htmlFor="field3" className="form-label">Message Footer</label>
+            <input
+              type="text"
+
+              id="field3"
+              value={field3}
+              onChange={(e) => setField3(e.target.value)}
+
+            />
+          </div>
+
+          <div className="mb-2 d-flex flex-column">
+            <label htmlFor="field4" className="form-label">Footer Button Text*</label>
+            <input
+              type="text"
+
+              id="field4"
+              value={field4}
+              onChange={(e) => setField4(e.target.value)}
+
+            />
+          </div>
+
+          <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>
+          <input type="range"  min={0}
+            max={30}
+            step={1}
+            value={delay}
+            onChange={(e) => setDelay(parseInt(e.target.value))}
+            style={{ width: '100%' }}
+          />
+
+          <div className='mt-4 d-flex justify-content-end'>
+            <button className='btn offcanvas-close me-2' onClick={onClose}>Close</button>
+            <button className='btn text-save' onClick={() => handleSaveContent({
+              type: 'WhatsappFlow',
+              flowType,
+              field1,
+              field2,
+              field3,
+              field4,
+              delay
+            })}>
+              Save
+            </button>
+          </div>
         </div>
       )}
+
     </div>
   );
 };

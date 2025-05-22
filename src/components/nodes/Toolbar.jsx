@@ -1,24 +1,113 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
+import { saveOrUpdateBot } from '../api/botApi';
+import { toast, ToastContainer } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css';
 
 const nodeTypes = [
   { type: 'Text', icon: 'proicons:draw-text', color: 'blue' },
   { type: 'Image', icon: 'solar:gallery-add-bold', color: 'black' },
-  { type: 'YouTube', icon: 'openmoji:youtube' },
-  { type: 'Voice', icon: 'fluent-color:mic-16' },
+  { type: 'Video', icon: 'openmoji:youtube', color: 'red' },
+  { type: 'Audio', icon: 'fluent-color:mic-16', color: 'purple' },
   { type: 'File', icon: 'codex:file', color: 'green' },
   { type: 'Location', icon: 'mingcute:location-line', color: 'purple' },
-  { type: 'Share', icon: 'material-symbols:share-outline', color: 'greenyellow' },
-  { type: 'Computer', icon: 'icon-park:add-computer', color: 'red' },
+  { type: 'Whatsapp', icon: 'fluent:flowchart-16-filled', color: 'greenyellow' },
+  { type: 'Interactive', icon: 'material-symbols:interactive-space', color: 'red' },
   { type: 'Logic', icon: 'ic:baseline-greater-than-equal', color: 'blue' },
-  { type: 'Message', icon: 'ri:message-2-line', color: 'grey' },
+  { type: 'Sequence', icon: 'ri:message-2-line', color: 'grey' },
   { type: 'StackOverflow', icon: 'devicon:stackoverflow', color: 'brown' },
   { type: 'Template', icon: 'vscode-icons:folder-type-template-opened', color: 'orange' },
 ];
 
-const Toolbar = () => {
+const Toolbar = ({
+  nodes,
+  edges,
+  nodeContentMap,
+  savedStartBotData,
+  setNodes,
+  setEdges,
+  setNodeContentMap,
+  setSavedStartBotData,onDashboardClick
+}) => {
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    // 🧠 Enrich nodes with their respective data
+    const enrichedNodes = nodes.map((node) => {
+      if (node.type === 'defaultNode') {
+        const nodeData = nodeContentMap[node.id] || {};
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...nodeData,
+          },
+        };
+      }
+
+      if (node.type === 'startBot') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...savedStartBotData,
+          },
+        };
+      }
+
+      return node;
+    });
+
+    // 📦 Construct payload
+    const botData = {
+      startBotTitle: savedStartBotData?.title || 'Untitled Bot',
+      nodes: enrichedNodes,
+      edges,
+    };
+
+    // ❌ Validation: ensure all non-startBot nodes are connected
+    const unconnectedNodes = enrichedNodes.filter(node => {
+      const isConnected = edges.some(e => e.source === node.id || e.target === node.id);
+      return !isConnected && node.type !== 'startBot';
+    });
+
+    if (unconnectedNodes.length > 0) {
+      toast.error('Make sure all nodes are connected before saving.');
+      setIsSaving(false);
+      return;
+    }
+
+    // 💾 Save or update the bot
+    try {
+      const response = await saveOrUpdateBot(botData);
+      toast.success(response.data.message || 'Bot saved successfully!');
+
+      // 🔄 Reset flow canvas
+      setNodes([
+        {
+          id: 'start',
+          type: 'startBot',
+          position: { x: 250, y: 100 },
+          data: {},
+        },
+      ]);
+      setEdges([]);
+      setNodeContentMap({});
+      setSavedStartBotData(null);
+    } catch (err) {
+      toast.error('Error saving bot');
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleDragStart = (event, type) => {
-    event.dataTransfer.setData('application/reactflow', type);
+const nodeKind = type === 'Interactive' ? 'interactiveNode' : 'defaultNode';
+event.dataTransfer.setData('application/reactflow', JSON.stringify({ nodeType: nodeKind, contentType: type }));
     event.dataTransfer.effectAllowed = 'move';
   };
 
@@ -31,14 +120,24 @@ const Toolbar = () => {
             className="btn bg-light"
             draggable
             onDragStart={(e) => handleDragStart(e, type)}
+            title={type}
           >
             <Icon icon={icon} width="20" height="20" color={color || 'black'} />
           </button>
         ))}
       </div>
+
       <div>
-        <button className="btn save-btn">Save</button>
-      </div>
+        <button
+          onClick={handleSave}
+          className="btn save-btn"
+          disabled={isSaving}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
+ <button className='btn save-dash ms-2' onClick={onDashboardClick}>Dashboard</button>      </div>
+
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
