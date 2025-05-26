@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-const DefaultNode = ({ id, data, nodeContentMap, onRemoveNode }) => {
+const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
   const content = nodeContentMap?.[id];
-  console.log('Node Content:', content);
+  // console.log('Node Content:', content);
 
   const iconMap = {
     Text: "ic:baseline-textsms",
@@ -214,13 +214,14 @@ const DefaultNode = ({ id, data, nodeContentMap, onRemoveNode }) => {
         <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} onClick={(e) => {e.stopPropagation();
             if (onRemoveNode && id) {
               onRemoveNode(id);
+              onClose();
             } setShowClose(false); // hide close icon after removing
-          }} style={{ position: 'absolute',top: -8,   right: -6, cursor: 'pointer', fontSize: '8px',
+          }} style={{ position: 'absolute',top: -8,   right: -6, cursor: 'pointer', fontSize: '6px',
             color: 'black',zIndex: 10,userSelect: 'none',border:'1px solid black',borderRadius:'50%'
           }}
           title="Remove node"
         >
-            <Icon icon="ic:baseline-close" width="15" height="15"/>
+            <Icon icon="ic:baseline-close" width="10" height="10"/>
         </div>
       )}
 

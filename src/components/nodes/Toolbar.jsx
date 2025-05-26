@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { saveOrUpdateBot } from '../api/botApi';
-import { toast, ToastContainer } from 'react-toastify'; 
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const nodeTypes = [
@@ -13,6 +13,8 @@ const nodeTypes = [
   { type: 'Location', icon: 'mingcute:location-line', color: 'purple' },
   { type: 'Whatsapp', icon: 'fluent:flowchart-16-filled', color: 'greenyellow' },
   { type: 'Interactive', icon: 'material-symbols:interactive-space', color: 'red' },
+
+
   { type: 'Logic', icon: 'ic:baseline-greater-than-equal', color: 'blue' },
   { type: 'Sequence', icon: 'ri:message-2-line', color: 'grey' },
   { type: 'StackOverflow', icon: 'devicon:stackoverflow', color: 'brown' },
@@ -106,10 +108,27 @@ const Toolbar = ({
   };
 
   const handleDragStart = (event, type) => {
-const nodeKind = type === 'Interactive' ? 'interactiveNode' : 'defaultNode';
-event.dataTransfer.setData('application/reactflow', JSON.stringify({ nodeType: nodeKind, contentType: type }));
+    let nodeType; // Initialize without a default value
+    let contentType = type;
+
+    if (type === 'Interactive') {
+      nodeType = 'interactiveNode';
+    } else if (type === 'sequence') { // Check for Sequence first
+      nodeType = 'sequenceNode';
+    } else if (type === 'SendMessageAfter') {
+      nodeType = 'sendMessageAfterNode';
+    } else if (['Button', 'List', 'eCommerce'].includes(type)) {
+      nodeType = type.toLowerCase() + 'Node';
+    } else {
+      nodeType = 'defaultNode'; // Default only if no other type matches
+    }
+
+    const transferData = JSON.stringify({ nodeType, contentType });
+    event.dataTransfer.setData('application/reactflow', transferData);
     event.dataTransfer.effectAllowed = 'move';
+    console.log('Toolbar: Setting dataTransfer:', transferData); // New log
   };
+
 
   return (
     <div className="button-div">
@@ -135,7 +154,7 @@ event.dataTransfer.setData('application/reactflow', JSON.stringify({ nodeType: n
         >
           {isSaving ? 'Saving...' : 'Save'}
         </button>
- <button className='btn save-dash ms-2' onClick={onDashboardClick}>Dashboard</button>      </div>
+        <button className='btn save-dash ms-2' onClick={onDashboardClick}>Dashboard</button>      </div>
 
       <ToastContainer position="top-right" autoClose={3000} />
     </div>

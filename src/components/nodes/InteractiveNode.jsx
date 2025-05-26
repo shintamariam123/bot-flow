@@ -5,11 +5,11 @@ import { Icon } from '@iconify/react';
 
 
 
-const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap }) => {
+const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap, onClose }) => {
 
   const [showClose, setShowClose] = useState(false);
   const content = nodeContentMap[id];
-  console.log('Node Content:', content);
+  // console.log('Node Content:', content);
 
   // Right-click handler
   const handleContextMenu = (e) => {
@@ -38,16 +38,17 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap }) => {
               e.stopPropagation();
               if (onRemoveNode && id) {
                 onRemoveNode(id);
+                onClose();
               }
               setShowClose(false); // hide close icon after removing
             }}
             style={{
               position: 'absolute', top: -8,
-              right: -6, cursor: 'pointer', fontSize: '8px', color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
+              right: -6, cursor: 'pointer', fontSize: '6px', color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
             }}
             title="Remove node"
           >
-            <Icon icon="ic:baseline-close" width="15" height="15" />
+            <Icon icon="ic:baseline-close" width="10" height="10" />
           </div>
         )}
         <div className=" d-flex flex-column align-items-center w-100">
@@ -144,7 +145,6 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap }) => {
         <div className="dotted-line mt-2 mb-5" />
         <div className="px-2 footer mt-2 d-flex align-self-end">
           <p>Reply</p>
-          <p className="ms-auto"></p>
         </div>
         {/* Four source handles */}
         <Handle type="target" position={Position.Bottom} style={{
@@ -159,6 +159,16 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap }) => {
 
         <div className='container'>
           {/* Labels for each source handle */}
+          <div style={{ position: 'absolute', right: 10, bottom: 55, fontSize: '6px' }}>
+            Next
+            <Handle type="source" position={Position.Right} style={{
+              left: 'auto', right: -10, bottom: 5, width: 10,
+              height: 10,
+              borderRadius: '50%',  // Circle
+              background: 'white',
+              border: '1px solid grey'
+            }} />
+          </div>
           <div style={{ position: 'absolute', right: 10, bottom: 40, fontSize: '6px', cursor: 'pointer' }}
           >
             Buttons
@@ -171,7 +181,7 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap }) => {
             }} />
           </div>
 
-           <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
+          <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
             onClick={(e) => {
               e.stopPropagation();
               data?.spawnConnectedNode?.(id, "list", "list");
@@ -195,16 +205,7 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap }) => {
             }} />
           </div>
 
-          <div style={{ position: 'absolute', right: 10, bottom: 55, fontSize: '6px' }}>
-            Next
-            <Handle type="source" position={Position.Right} style={{
-              left: 'auto', right: -10, bottom: 5, width: 10,
-              height: 10,
-              borderRadius: '50%',  // Circle
-              background: 'white',
-              border: '1px solid grey'
-            }} />
-          </div> 
+
 
         </div>
 

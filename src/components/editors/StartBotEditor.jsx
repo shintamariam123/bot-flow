@@ -36,7 +36,7 @@ const StartBotEditor = ({ isOpen, onClose, savedData, setSavedData }) => {
     onClose();
   };
   useEffect(() => {
-    console.log("Saved Data changed:", savedData);
+    // console.log("Saved Data changed:", savedData);
   }, [savedData]);
 
 
