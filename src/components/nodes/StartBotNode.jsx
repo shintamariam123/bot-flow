@@ -17,7 +17,7 @@ const StartBotNode = ({ data }) => {
                     <Icon icon="fa-solid:walking" width="15" height="15" color='black' />
                     <p className='ms-2 heading '>Start Bot Flow</p>
                 </div>
-                <div style={{ marginBottom: '0px' }} className='d-flex bot_flow'>
+                <div style={{ marginBottom: '0px' }} className='d-flex bot_flow px-1'>
                     <Icon icon="hugeicons:sent" width="8" height="8" color='blue' />
                     <p className='me-1 ms-1'>Sent <br />0</p>
                     <Icon icon="hugeicons:package-delivered" width="8" height="8" color='green' />
