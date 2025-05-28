@@ -1,10 +1,9 @@
 // ButtonNode.jsx
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
-
 import { Handle, Position } from '@xyflow/react';
 
-const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap }) => {
+const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap, onSubscribeToSequence}) => {
 
     const content = nodeContentMap[id] || {};
     // console.log('ButtonNode content:', content);
@@ -96,45 +95,45 @@ const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap }
 
                         {/* Display additional info based on actionType  */}
                         {content.actionType === 'send' && (
-                            
-                               <>
+
+                            <>
                                 {content.formData?.addLabel &&
-                                <div className='reply-box mt-1 w-fit-content'>
-                                  <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Add Label: <span style={{ color: 'black' }}>{content.formData.addLabel}</span>  </p>  
-                                </div>}
-                                  {content.formData?.removeLabel &&
-                                 <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Remove Label: <span style={{ color: 'black' }}>{content.formData.removeLabel}</span>  </p>  
-                                </div>}
-                                  {content.formData?.subscribeSequence &&
-                                 <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Subscribe: <span style={{ color: 'black' }}>{content.formData.subscribeSequence}</span>  </p>  
-                                </div>}
-                                 {content.formData?.unsubscribeSequence &&
-                                 <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Unsubscribe: <span style={{ color: 'black' }}>{content.formData.unsubscribeSequence}</span>  </p>  
-                                </div>}
-                                 {content.formData?.assignTo &&
-                                 <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Assign To: <span style={{ color: 'black' }}>{content.formData.assignTo}</span>  </p>  
-                                </div>}
-                                 {content.formData?.webhookURL &&
-                                 <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Webhook: <span style={{ color: 'black' }}>{content.formData.webhookURL}</span>  </p>  
-                                </div>}
-                               
-                               </>
+                                    <div className='reply-box mt-1 w-fit-content'>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Add Label: <span style={{ color: 'black' }}>{content.formData.addLabel}</span>  </p>
+                                    </div>}
+                                {content.formData?.removeLabel &&
+                                    <div className='reply-box mt-1 w-fit-content'>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Remove Label: <span style={{ color: 'black' }}>{content.formData.removeLabel}</span>  </p>
+                                    </div>}
+                                {content.formData?.subscribeSequence &&
+                                    <div className='reply-box mt-1 w-fit-content'>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Subscribe: <span style={{ color: 'black' }}>{content.formData.subscribeSequence}</span>  </p>
+                                    </div>}
+                                {content.formData?.unsubscribeSequence &&
+                                    <div className='reply-box mt-1 w-fit-content'>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Unsubscribe: <span style={{ color: 'black' }}>{content.formData.unsubscribeSequence}</span>  </p>
+                                    </div>}
+                                {content.formData?.assignTo &&
+                                    <div className='reply-box mt-1 w-fit-content'>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Assign To: <span style={{ color: 'black' }}>{content.formData.assignTo}</span>  </p>
+                                    </div>}
+                                {content.formData?.webhookURL &&
+                                    <div className='reply-box mt-1 w-fit-content'>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Webhook: <span style={{ color: 'black' }}>{content.formData.webhookURL}</span>  </p>
+                                    </div>}
+
+                            </>
                         )}
                         {content.actionType === 'flow' && content.formData?.flowName && (
-                             <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Start Flow: <span style={{ color: 'black' }}>{content.formData.flowName}</span>  </p>  
-                                </div>
+                            <div className='reply-box mt-1 w-fit-content'>
+                                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Start Flow: <span style={{ color: 'black' }}>{content.formData.flowName}</span>  </p>
+                            </div>
                         )}
 
                         {content.actionType === 'system' && content.formData?.systemAction && (
-                             <div className='reply-box mt-1 w-fit-content'>
-                                 <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>System Action: <span style={{ color: 'black' }}>{content.formData.systemAction}</span>  </p>  
-                                </div>
+                            <div className='reply-box mt-1 w-fit-content'>
+                                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>System Action: <span style={{ color: 'black' }}>{content.formData.systemAction}</span>  </p>
+                            </div>
                         )}
 
 
@@ -167,19 +166,23 @@ const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap }
                 background: 'white',
                 border: '1px solid grey'
             }} />
-            <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
-            >
+            <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}>
                 Next
-                <Handle type="source" position={Position.Right} id="list" style={{
+                <Handle id='next' type="source" position={Position.Right}  style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />
             </div>
 
             <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}
-            >
+              onClick={(e) => {
+                    e.stopPropagation();
+                    if (onSubscribeToSequence && id) {
+                        onSubscribeToSequence(id); // Just pass the node ID
+                    }
+                 }}>
                 Subscribe to sequence
-                <Handle type="source" position={Position.Right} id="ecommerce" style={{
+                <Handle id='subscribe' type="source" position={Position.Right} style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />

@@ -59,7 +59,6 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap, onClose }) =>
             {/* <p>interactive</p> */}
           </div>
 
-
           <div className="d-flex bot_flow p-1" style={{ marginBottom: '0px' }}>
             <Icon icon="hugeicons:sent" width="8" height="8" color="blue" />
             <p className="me-1 ms-1">
