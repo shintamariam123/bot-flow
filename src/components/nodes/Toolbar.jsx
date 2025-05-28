@@ -16,7 +16,7 @@ const nodeTypes = [
 
 
   { type: 'Logic', icon: 'ic:baseline-greater-than-equal', color: 'blue' },
-  { type: 'Sequence', icon: 'ri:message-2-line', color: 'grey' },
+  { type: 'Sequence', icon: 'ri:message-2-line', color: 'black' },
   { type: 'StackOverflow', icon: 'devicon:stackoverflow', color: 'brown' },
   { type: 'Template', icon: 'vscode-icons:folder-type-template-opened', color: 'orange' },
 ];
@@ -29,7 +29,7 @@ const Toolbar = ({
   setNodes,
   setEdges,
   setNodeContentMap,
-  setSavedStartBotData,onDashboardClick
+  setSavedStartBotData, onDashboardClick
 }) => {
 
   const [isSaving, setIsSaving] = useState(false);
@@ -113,7 +113,7 @@ const Toolbar = ({
 
     if (type === 'Interactive') {
       nodeType = 'interactiveNode';
-    } else if (type === 'sequence') { // Check for Sequence first
+    } else if (type === 'Sequence') { // Check for Sequence first
       nodeType = 'sequenceNode';
     } else if (type === 'SendMessageAfter') {
       nodeType = 'sendMessageAfterNode';

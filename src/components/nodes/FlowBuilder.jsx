@@ -6,7 +6,8 @@ import {
   Background,
   useNodesState,
   useEdgesState,
-  addEdge, ReactFlowProvider
+  addEdge,
+  useReactFlow // Import useReactFlow to get screenToFlowPosition
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -30,8 +31,6 @@ import SendMessageAfterNode from './SendMessageAfterNode';
 import SendMessageAfterEditor from '../editors/SendMessageAfterEditor';
 
 
-
-
 let id = 1;
 const getId = () => `node_${id++}`;
 
@@ -45,6 +44,8 @@ const initialNodes = [
 ];
 
 function FlowBuilder() {
+  const { screenToFlowPosition } = useReactFlow();
+
   const [savedStartBotData, setSavedStartBotData] = useState(null);
   const [nodeContentMap, setNodeContentMap] = useState({});
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -55,8 +56,6 @@ function FlowBuilder() {
   // interactive editor
   const [showInteractiveEditor, setShowInteractiveEditor] = useState(false);
   const [activeInteractiveNodeId, setActiveInteractiveNodeId] = useState(null);
-  // const [interactiveContent, setInteractiveContent] = useState({});
-
 
   const [selectedNode, setSelectedNode] = useState(null);
   const [editorType, setEditorType] = useState(null);
@@ -65,7 +64,7 @@ function FlowBuilder() {
   const [selectedSendMessageNode, setSelectedSendMessageNode] = useState(null);
 
 
-  const onNodeClick = (_event, node) => {
+  const onNodeClick = useCallback((_event, node) => { // Added useCallback
     switch (node.type) {
       case 'defaultNode':
         setSelectedDefaultNode(node);
@@ -92,12 +91,8 @@ function FlowBuilder() {
       default:
         break;
     }
-  };
+  }, []); // Empty dependency array as it only sets state based on clicked node properties
 
-
-
-
-  // Function to save updated content for interactive nodes in the shared nodeContentMap state
 
   const handleSaveInteractiveContent = (nodeId, content) => {
     setNodeContentMap(prev => ({
@@ -121,17 +116,29 @@ function FlowBuilder() {
       list: 'listNode',
       ecommerce: 'ecommerceNode',
     };
+    // Get the source node to position the new node relative to it
+    const sourceNode = nodes.find(node => node.id === sourceNodeId);
+    let newPosition = { x: 0, y: 0 };
+    if (sourceNode) {
+      newPosition = {
+        x: sourceNode.position.x + 300, // Position to the right of the source node
+        y: sourceNode.position.y,
+      };
+    } else {
+      // Fallback if sourceNode is not found (e.g., if somehow a node calls this without being on canvas)
+      newPosition = { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 };
+    }
+
     const newNode = {
       id: newNodeId,
       type: nodeTypeMap[type] || 'defaultNode',
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position: newPosition,
       data: {
         label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
         type,
-        ...nodeContentMap[newNodeId] || {}, // ✅ this passes only the node-specific content
+        ...nodeContentMap[newNodeId] || {},
       },
     };
-
 
     const newEdge = {
       id: `e-${sourceNodeId}-${newNodeId}`,
@@ -143,7 +150,7 @@ function FlowBuilder() {
 
     setNodes((nds) => [...nds, newNode]);
     setEdges((eds) => [...eds, newEdge]);
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, nodes, nodeContentMap]); // Added nodes to dependency array
 
 
   const handleSaveButtonContent = (id, content) => {
@@ -161,7 +168,6 @@ function FlowBuilder() {
             ...node,
             data: {
               ...node.data,
-              // just triggering a data change
               updateTrigger: new Date().toISOString(),
             },
           }
@@ -170,6 +176,151 @@ function FlowBuilder() {
     );
   };
 
+  // NEW: Handler for saving SequenceEditor content
+  const handleSaveSequenceContent = useCallback((content) => {
+    if (!selectedSequenceNode) return; // Ensure a node is selected
+
+    const nodeId = selectedSequenceNode.id;
+
+    // Update the nodeContentMap with the new content for this node
+    setNodeContentMap(prev => ({
+      ...prev,
+      [nodeId]: content,
+    }));
+
+
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+            ...node,
+            data: {
+              ...node.data,
+              updateTrigger: new Date().toISOString(),
+             
+            },
+          }
+          : node
+      )
+    );
+
+    // Close the editor after saving
+    setSelectedSequenceNode(null);
+  }, [selectedSequenceNode, setNodeContentMap, setNodes]);
+
+ // NEW: Handler for saving SendMessageAfterEditor content
+  const handleSaveSendMessageContent = useCallback((content) => {
+    if (!selectedSendMessageNode) return;
+
+    const nodeId = selectedSendMessageNode.id;
+
+    setNodeContentMap(prev => ({
+      ...prev,
+      [nodeId]: content,
+    }));
+
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+            ...node,
+            data: {
+              ...node.data,
+              content: content, // Pass the saved content directly to the node's data
+              updateTrigger: new Date().toISOString(), // Trigger re-render
+            },
+          }
+          : node
+      )
+    );
+
+    setSelectedSendMessageNode(null); // Close the editor
+  }, [selectedSendMessageNode, setNodeContentMap, setNodes]);
+
+
+  const onRemoveNode = (nodeId) => {
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+
+
+    setNodeContentMap((prev) => {
+      const updated = { ...prev };
+      delete updated[nodeId];
+      return updated;
+    });
+  };
+
+  // --- ADDED FUNCTION: handleSubscribeToSequence (spawns new sequence and connects) ---
+  const handleSubscribeToSequence = useCallback((buttonNodeId) => {
+    const buttonNode = nodes.find(node => node.id === buttonNodeId);
+    if (!buttonNode) {
+      console.error('ButtonNode not found:', buttonNodeId);
+      return;
+    }
+
+    const newNodes = [];
+    const newEdges = [];
+
+    // 1. Create the new SequenceNode
+    const sequenceNodeId = getId();
+    const sequenceNodePosition = {
+      x: buttonNode.position.x + 300, // To the right of the button node
+      y: buttonNode.position.y + 50, // Slightly below for visual separation
+    };
+    const sequenceNode = {
+      id: sequenceNodeId,
+      type: 'sequenceNode',
+      position: sequenceNodePosition,
+      data: {
+        label: `New Sequence from Button`,
+        ...nodeContentMap[sequenceNodeId] || {},
+      },
+    };
+    newNodes.push(sequenceNode);
+
+    // 2. Connect ButtonNode to the newly spawned SequenceNode
+    newEdges.push({
+      id: `e-${buttonNodeId}-${sequenceNodeId}-button-subscribe`,
+      source: buttonNodeId,
+      sourceHandle: 'subscribe', // The handle from ButtonNode.jsx
+      target: sequenceNodeId,
+      targetHandle: 'subscribe-target', // The target handle you need to define in SequenceNode.jsx
+      type: 'smoothstep',
+    });
+
+    // 3. Create 3 SendMessageAfterNodes and connect them to the new SequenceNode
+    for (let i = 0; i < 3; i++) {
+      const sendMessageNodeId = getId();
+      const sendMessageNodePosition = {
+        x: sequenceNodePosition.x + 300, // To the right of the sequence node
+        y: sequenceNodePosition.y + (i * 180) - 50, // Stack vertically
+      };
+      const sendMessageNode = {
+        id: sendMessageNodeId,
+        type: 'sendMessageAfterNode',
+        position: sendMessageNodePosition,
+        data: {
+          label: `Send Message After ${i + 1}`,
+          ...nodeContentMap[sendMessageNodeId] || {},
+        },
+      };
+      newNodes.push(sendMessageNode);
+
+      // Connect SequenceNode's source handle to SendMessageAfterNode's target handle
+      newEdges.push({
+        id: `e-${sequenceNodeId}-schedule-sequence-msg-${sendMessageNodeId}-send-after-${i}`,
+        source: sequenceNodeId,
+        sourceHandle: 'schedule-sequence-msg', // This handle needs to be defined in SequenceNode.jsx
+        target: sendMessageNodeId,
+        targetHandle: 'send-after', // This handle needs to be defined in SendMessageAfterNode.jsx
+        type: 'smoothstep',
+      });
+    }
+
+    setNodes((nds) => [...nds, ...newNodes]);
+    setEdges((eds) => [...eds, ...newEdges]);
+
+  }, [nodes, setNodes, setEdges, nodeContentMap]);
 
 
   // Register node types, including interactiveNode
@@ -204,14 +355,16 @@ function FlowBuilder() {
         onEditButtonNode={(id) => {
           setSelectedNode(nodes.find(n => n.id === id));
           setEditorType('buttonNode');
-        }} />
+        }}
+        onSubscribeToSequence={handleSubscribeToSequence} // Pass the handler here!
+      />
     ),
     listNode: (nodeProps) => (
       <ListNode
         {...nodeProps}
         onRemoveNode={onRemoveNode}
         onEditListNode={(id) => {
-          setSelectedNode(nodeProps);  // Save the selected node
+          setSelectedNode(nodeProps);  // Save the selected node
           setEditorType('listNode'); // Set the editor type
         }} />
     ),
@@ -220,7 +373,7 @@ function FlowBuilder() {
         {...nodeProps}
         onRemoveNode={onRemoveNode}
         onEditEcommerceNode={(id) => {
-          setSelectedNode(nodeProps);  // Save the selected node
+          setSelectedNode(nodeProps);  // Save the selected node
           setEditorType('ecommerceNode'); // Set the editor type
         }} />
     ),
@@ -230,8 +383,15 @@ function FlowBuilder() {
         {...nodeProps}
         nodeContentMap={nodeContentMap}
         onRemoveNode={onRemoveNode}
-        onEditSequenceNode={() => setSelectedSequenceNode(nodeProps)}
-
+        onEditSequenceNode={(nodeId) => {
+          const nodeToEdit = nodes.find(n => n.id === nodeId);
+          console.log('Attempting to open editor for node:', nodeToEdit);
+          setSelectedSequenceNode(nodeToEdit);
+        }}
+        data={{
+          ...nodeProps.data,
+          content: nodeContentMap[nodeProps.id] || {}, // This is key!
+        }}
       />
     ),
     sendMessageAfterNode: (nodeProps) => (
@@ -239,26 +399,16 @@ function FlowBuilder() {
         {...nodeProps}
         nodeContentMap={nodeContentMap}
         onRemoveNode={onRemoveNode}
-        onEditSendMessageNode={() => setSelectedSendMessageNode(nodeProps)}
-      />
-    ),
+        onEditSendMessageNode={(nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId))}
+         data={{
+          ...nodeProps.data,
+          content: nodeContentMap[nodeProps.id] || {}, // Pass content from map
+        }}
+        />
+   
+      ),
 
-  }), [nodeContentMap, spawnConnectedNode]);
-
-
-
-  const onRemoveNode = (nodeId) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-
-
-    setNodeContentMap((prev) => {
-      const updated = { ...prev };
-      delete updated[nodeId];
-      return updated;
-    });
-  };
-
+  }), [nodeContentMap, spawnConnectedNode, onRemoveNode, nodes, handleSubscribeToSequence, handleSaveSequenceContent]); // Added handleSubscribeToSequence to dependencies
 
 
   useEffect(() => {
@@ -284,7 +434,6 @@ function FlowBuilder() {
     (event) => {
       event.preventDefault();
       const data = event.dataTransfer.getData('application/reactflow');
-      console.log('FlowBuilder: onDrop received data:', data); // New log
 
       let nodeType = 'defaultNode';
       let contentType = '';
@@ -293,15 +442,14 @@ function FlowBuilder() {
         nodeType = parsed.nodeType;
         contentType = parsed.contentType;
       } catch (e) {
-        console.error('FlowBuilder: Error parsing dataTransfer data:', e); // Log parsing error
         contentType = data; // Fallback
       }
-      console.log('FlowBuilder: Parsed nodeType:', nodeType, 'contentType:', contentType);
 
-      const position = { x: event.clientX - 250, y: event.clientY - 100 };
+      // Use screenToFlowPosition for accurate dropping
+      const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
       // Use interactiveNode if it's one of the interactive subtypes
-      if (['button', 'list', 'ecommerce'].includes(contentType.toLowerCase())) { // Ensure case-insensitivity here
+      if (['button', 'list', 'ecommerce'].includes(contentType.toLowerCase())) {
         nodeType = `${contentType.toLowerCase()}Node`;
       }
 
@@ -309,7 +457,6 @@ function FlowBuilder() {
 
       // Special handling for SequenceNode: automatically connect 3 SendMessageAfterNodes
       if (nodeType === 'sequenceNode') {
-        console.log('FlowBuilder: Dropping Sequence Node logic triggered.'); // Log 3
         const sequenceNode = {
           id: newNodeId,
           type: 'sequenceNode',
@@ -328,7 +475,7 @@ function FlowBuilder() {
           const sendMessageNodeId = getId();
           const sendMessageNodePosition = {
             x: position.x + 300, // Position to the right of the sequence node
-            y: position.y + (i * 100) - 50, // Stack vertically
+            y: position.y + (i * 180) - 50, // Stack vertically
           };
           const sendMessageNode = {
             id: sendMessageNodeId,
@@ -352,22 +499,10 @@ function FlowBuilder() {
           });
         }
 
-        console.log('FlowBuilder: New nodes to add:', newNodes); // Log 4
-        console.log('FlowBuilder: New edges to add:', newEdges); // Log 5
-
-        setNodes((nds) => {
-          const updated = nds.concat(newNodes);
-          console.log('FlowBuilder: Nodes after setNodes:', updated); // Log 6
-          return updated;
-        });
-        setEdges((eds) => {
-          const updated = eds.concat(newEdges);
-          console.log('FlowBuilder: Edges after setEdges:', updated); // Log 7
-          return updated;
-        });
+        setNodes((nds) => nds.concat(newNodes));
+        setEdges((eds) => eds.concat(newEdges));
 
       } else {
-        console.log('FlowBuilder: Dropping other node type:', nodeType); // Log for other types
         const newNode = {
           id: newNodeId,
           type: nodeType,
@@ -378,10 +513,9 @@ function FlowBuilder() {
           },
         };
         setNodes((nds) => nds.concat({ ...newNode, id: newNodeId }));
-        console.log('FlowBuilder: Nodes after adding single node:', nodes.concat({ ...newNode, id: newNodeId }));
       }
     },
-    [setNodes, setEdges, nodeContentMap] // Added nodeContentMap to dependencies
+    [setNodes, setEdges, nodeContentMap, screenToFlowPosition] // Added screenToFlowPosition to dependencies
   );
 
   const onDragOver = useCallback((event) => {
@@ -393,147 +527,132 @@ function FlowBuilder() {
   const openStartBotEditor = () => setShowStartEditor(true);
   const closeStartBotEditor = () => setShowStartEditor(false);
 
-  const onDefaultNodeClick = (_event, node) => {
-    if (node.type === 'defaultNode') {
-      setSelectedDefaultNode(node);
-    }
-  };
 
   const closeDefaultNodeEditor = () => setSelectedDefaultNode(null);
 
   const updatedNodes = nodes.map((node) =>
     node.type === 'startBot'
-      ? { ...node, data: { ...node.data, openEditor: openStartBotEditor } }
+      ? { ...node, data: { ...node.data, savedData: savedStartBotData, openEditor: openStartBotEditor } }
       : node
   );
 
+
   return (
-    <ReactFlowProvider>
-      <div style={{ width: '100vw', height: '100vh' }}>
-        <Toolbar
-          nodes={nodes}
+    <div style={{ width: '100vw', height: '100vh' }}>
+      <Toolbar
+        nodes={nodes}
+        edges={edges}
+        nodeContentMap={nodeContentMap}
+        savedStartBotData={savedStartBotData}
+        setNodes={setNodes}
+        setEdges={setEdges}
+        setNodeContentMap={setNodeContentMap}
+        setSavedStartBotData={setSavedStartBotData}
+        onDashboardClick={() => navigate('/dashboard')} // Pass navigate fn
+      />
+      <div style={{ width: '100%', height: '90%' }}>
+        <ReactFlow
+          nodes={updatedNodes}
           edges={edges}
-          nodeContentMap={nodeContentMap}
-          savedStartBotData={savedStartBotData}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          setNodeContentMap={setNodeContentMap}
-          setSavedStartBotData={setSavedStartBotData}
-          onDashboardClick={() => navigate('/dashboard')} // Pass navigate fn
-        />
-        <div style={{ width: '100%', height: '90%' }}>
-          <ReactFlow
-            nodes={updatedNodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onDrop={onDrop}
-            onDragOver={onDragOver}
-            onNodeClick={onNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-          >
-            <MiniMap />
-            <Controls />
-            <Background />
-          </ReactFlow>
-        </div>
-
-        {/* Offcanvas editors */}
-        <StartBotEditor
-          isOpen={showStartEditor}
-          onClose={closeStartBotEditor}
-          savedData={savedStartBotData}
-          setSavedData={setSavedStartBotData}
-        />
-        <DefaultNodeEditor
-          node={selectedDefaultNode}
-          onClose={closeDefaultNodeEditor}
-          nodeContentMap={nodeContentMap}
-          setNodeContentMap={setNodeContentMap}
-          onRemoveNode={onRemoveNode}
-        />
-        <InteractiveNodeEditor
-          show={showInteractiveEditor}
-          onClose={() => setShowInteractiveEditor(false)}
-          nodeId={activeInteractiveNodeId}
-          content={nodeContentMap[activeInteractiveNodeId] || {}}
-          onSave={handleSaveInteractiveContent}
-        />
-        {selectedSequenceNode && (
-          <SequenceEditor
-            node={selectedSequenceNode}
-            content={nodeContentMap[selectedSequenceNode.id] || {}}
-            onSave={(content) => {
-              setNodeContentMap(prev => ({ ...prev, [selectedSequenceNode.id]: content }));
-              setSelectedSequenceNode(null);
-            }}
-            onClose={() => setSelectedSequenceNode(null)}
-          />
-        )}
-
-        {selectedSendMessageNode && (
-          <SendMessageAfterEditor
-            node={selectedSendMessageNode}
-            content={nodeContentMap[selectedSendMessageNode.id] || {}}
-            onSave={(content) => {
-              setNodeContentMap(prev => ({ ...prev, [selectedSendMessageNode.id]: content }));
-              setSelectedSendMessageNode(null);
-            }}
-            onClose={() => setSelectedSendMessageNode(null)}
-          />
-        )}
-
-        {editorType === 'buttonNode' && selectedNode && (
-          <ButtonEditor
-            show={true}
-            nodeId={selectedNode?.id}
-            content={nodeContentMap[selectedNode.id]}
-            onSave={
-              handleSaveButtonContent
-            }
-
-            onClose={() => {
-              setSelectedNode(null);
-              setEditorType(null);
-            }}
-          />
-
-
-
-        )}
-
-        {editorType === 'listNode' && selectedNode && (
-          <ListEditor
-            show={editorType === 'listNode'}
-            onClose={() => {
-              setSelectedNode(null);
-              setEditorType(null);
-            }}
-            nodeId={selectedNode.id}
-            content={nodeContentMap[selectedNode.id]}
-            onSave={(id, content) => {
-              setNodeContentMap((prev) => ({ ...prev, [id]: content }));
-            }}
-          />
-        )}
-        {editorType === 'ecommerceNode' && selectedNode && (
-          <EcommerceEditor
-            show={editorType === 'ecommerceNode'}
-            onClose={() => {
-              setSelectedNode(null);
-              setEditorType(null);
-            }}
-            nodeId={selectedNode.id}
-            content={nodeContentMap[selectedNode.id]}
-            onSave={(id, content) => {
-              setNodeContentMap((prev) => ({ ...prev, [id]: content }));
-            }}
-          />
-        )}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          onNodeClick={onNodeClick}
+          nodeTypes={nodeTypes}
+          fitView
+        >
+          <MiniMap />
+          <Controls />
+          <Background />
+        </ReactFlow>
       </div>
-    </ReactFlowProvider>
+
+      {/* Offcanvas editors */}
+      <StartBotEditor
+        isOpen={showStartEditor}
+        onClose={closeStartBotEditor}
+        savedData={savedStartBotData}
+        setSavedData={setSavedStartBotData}
+      />
+      <DefaultNodeEditor
+        node={selectedDefaultNode}
+        onClose={closeDefaultNodeEditor}
+        nodeContentMap={nodeContentMap}
+        setNodeContentMap={setNodeContentMap}
+        onRemoveNode={onRemoveNode}
+      />
+      <InteractiveNodeEditor
+        show={showInteractiveEditor}
+        onClose={() => setShowInteractiveEditor(false)}
+        nodeId={activeInteractiveNodeId}
+        content={nodeContentMap[activeInteractiveNodeId] || {}}
+        onSave={handleSaveInteractiveContent}
+      />
+      {selectedSequenceNode && (
+        <SequenceEditor
+          node={selectedSequenceNode}
+          content={nodeContentMap[selectedSequenceNode.id] || {}}
+          onSave={handleSaveSequenceContent}
+          onClose={() => setSelectedSequenceNode(null)}
+        />
+      )}
+
+      {selectedSendMessageNode && (
+        <SendMessageAfterEditor
+          node={selectedSendMessageNode}
+          content={nodeContentMap[selectedSendMessageNode.id] || {}}
+          onSave={handleSaveSendMessageContent}
+          onClose={() => setSelectedSendMessageNode(null)}
+        />
+      )}
+
+      {editorType === 'buttonNode' && selectedNode && (
+        <ButtonEditor
+          show={true}
+          nodeId={selectedNode?.id}
+          content={nodeContentMap[selectedNode.id]}
+          onSave={
+            handleSaveButtonContent
+          }
+
+          onClose={() => {
+            setSelectedNode(null);
+            setEditorType(null);
+          }}
+        />
+      )}
+
+      {editorType === 'listNode' && selectedNode && (
+        <ListEditor
+          show={editorType === 'listNode'}
+          onClose={() => {
+            setSelectedNode(null);
+            setEditorType(null);
+          }}
+          nodeId={selectedNode.id}
+          content={nodeContentMap[selectedNode.id]}
+          onSave={(id, content) => {
+            setNodeContentMap((prev) => ({ ...prev, [id]: content }));
+          }}
+        />
+      )}
+      {editorType === 'ecommerceNode' && selectedNode && (
+        <EcommerceEditor
+          show={editorType === 'ecommerceNode'}
+          onClose={() => {
+            setSelectedNode(null);
+            setEditorType(null);
+          }}
+          nodeId={selectedNode.id}
+          content={nodeContentMap[selectedNode.id]}
+          onSave={(id, content) => {
+            setNodeContentMap((prev) => ({ ...prev, [id]: content }));
+          }}
+        />
+      )}
+    </div>
   );
 }
 
