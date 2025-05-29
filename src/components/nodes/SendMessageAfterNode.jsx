@@ -1,9 +1,9 @@
-import React, { useState,useEffect } from 'react';
-import { Handle, Position } from '@xyflow/react'; // <-- Change this line
+import React, { useState, useEffect } from 'react';
+import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-
-const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode }) => {
+// Wrap the component with React.memo
+const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMessageNode }) => {
   // console.log(`Rendering SendMessageAfterNode with ID: ${id}`);
 
   const [showClose, setShowClose] = useState(false);
@@ -15,9 +15,10 @@ const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode })
       setDisplayedContent(data.content);
     }
   }, [data.content]); // Dependency array: re-run when data.content changes
+
   // Right-click handler
   const handleContextMenu = (e) => {
-    e.preventDefault();  // prevent default context menu
+    e.preventDefault();  // prevent default context menu
     setShowClose(true);
   };
 
@@ -44,7 +45,6 @@ const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode })
             e.stopPropagation();
             if (onRemoveNode && id) {
               onRemoveNode(id);
-
             }
             setShowClose(false); // hide close icon after removing
           }}
@@ -61,7 +61,6 @@ const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode })
         <div className="d-flex align-self-start align-items-center gap-1 mb-3 p-2">
           <Icon icon='rivet-icons:question-mark-solid' width="10" height="10" />
           <p className="default-heading mb-0">Send Message After</p>
-          {/* <p>interactive</p> */}
         </div>
         <div className="d-flex bot_flow p-1" style={{ marginBottom: '0px' }}>
           <Icon icon="hugeicons:sent" width="8" height="8" color="blue" />
@@ -90,35 +89,27 @@ const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode })
           </p>
         </div>
         {displayedContent.is24HourWindowEnabled || displayedContent.isDailySequenceEnabled ?
-
           (
             <>
               <div className='p-1 d-flex flex-column align-items-center w-100'>
                 {displayedContent.is24HourWindowEnabled && (
                   <div className='delay-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "blue" }}><span style={{ color: 'blue' }}>{displayedContent.scheduleAfterTime}</span> : Inside 24 - Hour Window  </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "blue" }}><span style={{ color: 'blue' }}>{displayedContent.scheduleAfterTime}</span> : Inside 24 - Hour Window  </p>
                   </div>
                 )}
                 {displayedContent.isDailySequenceEnabled && (
                   <div className='delay-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "blue" }}><span style={{ color: 'blue' }}>{displayedContent.scheduleForDay}</span> : Outside 24- Hour Window   </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "blue" }}><span style={{ color: 'blue' }}>{displayedContent.scheduleForDay}</span> : Outside 24- Hour Window   </p>
                   </div>
                 )}
               </div>
-
             </>
           ) : (
-
             <div onClick={handleThumbIconClick}>
               <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )
         }
-
-
-
-
-
       </div>
 
       <div className="dotted-line mt-3 " />
@@ -135,13 +126,11 @@ const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode })
         style={{
           right: 'auto', left: 0, bottom: 15, width: 10,
           height: 10,
-          borderRadius: '50%',  // Circle
+          borderRadius: '50%',  // Circle
           background: 'white',
           border: '1px solid grey'
         }}
       />
-
-
 
       {/* Source Handle: Schedule Msg */}
       <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
@@ -156,11 +145,8 @@ const SendMessageAfterNode = ({ data, id, onRemoveNode, onEditSendMessageNode })
           }}
         />
       </div>
-
-
-
     </div >
   );
-};
+}); // Don't forget to close the React.memo call
 
 export default SendMessageAfterNode;

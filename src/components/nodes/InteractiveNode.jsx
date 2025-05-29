@@ -216,4 +216,4 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap, onClose }) =>
   );
 };
 
-export default InteractiveNode;
+export default  InteractiveNode;

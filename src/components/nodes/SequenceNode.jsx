@@ -1,14 +1,12 @@
-import React, { useState,useEffect } from 'react';
-import { Handle, Position } from '@xyflow/react'; // <-- Change this line
+import React, { useState, useEffect } from 'react';
+import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-
-
-const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
+// Wrap the component with React.memo
+const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode }) => {
     // console.log(`Rendering SequenceNode with ID: ${id}`);
     const [showClose, setShowClose] = useState(false);
     const [displayedContent, setDisplayedContent] = useState({});
-
 
     useEffect(() => {
         if (data.content) {
@@ -16,11 +14,11 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
         }
     }, [data.content]); // Dependency array: re-run when data.content changes
 
-    // Helper to get campaign name from ID
-    const getCampaignName = (campaignId) => {
-        const campaign = allOptionsData.sequence_list.find(c => c.id === parseInt(campaignId));
-        return campaign ? campaign.campaign_name : 'N/A';
-    };
+    // Removed getCampaignName as allOptionsData is not available here
+    // If you still need to resolve campaign names from an ID,
+    // allOptionsData would need to be passed as a prop to this component,
+    // or you'd need a different way to access that data.
+    // Assuming data.content already contains the resolved campaign name.
 
     // Right-click handler
     const handleContextMenu = (e) => {
@@ -32,13 +30,13 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
     const handleClick = () => {
         if (showClose) setShowClose(false);
     };
+
     const handleThumbIconClick = (e) => {
         e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
         if (onEditSequenceNode) {
             onEditSequenceNode(id); // Call the passed function
         }
     };
-
 
     return (
         <div className={`content ${showClose ? 'node-highlighted' : ''}`}
@@ -51,7 +49,6 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
                         e.stopPropagation();
                         if (onRemoveNode && id) {
                             onRemoveNode(id);
-
                         }
                         setShowClose(false); // hide close icon after removing
                     }}
@@ -69,7 +66,6 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
                 <div className="d-flex align-self-start align-items-center gap-1 mb-3 p-2">
                     <Icon icon='ri:message-2-line' width="10" height="10" />
                     <p className="default-heading mb-0">New Sequence Campaign</p>
-                    {/* <p>interactive</p> */}
                 </div>
                 <div className="d-flex bot_flow p-1" style={{ marginBottom: '0px' }}>
                     <Icon icon="hugeicons:sent" width="8" height="8" color="blue" />
@@ -97,7 +93,7 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
                         0
                     </p>
                 </div>
-                {displayedContent.campaignName?
+                {displayedContent.campaignName ?
                     (
                         <div className='p-1 d-flex flex-column align-items-center w-100'>
                             {displayedContent.campaignName && (
@@ -115,25 +111,14 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
                                     <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Time Zone : <span style={{ color: 'black' }}>{displayedContent.timeZone}</span>  </p>
                                 </div>
                             )}
-
-
-
                         </div>
-
-
-
                     ) :
                     (
-
                         <div onClick={handleThumbIconClick}>
                             <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
                         </div>
                     )
-
                 }
-
-
-
             </div>
 
             <div className="dotted-line mt-3 " />
@@ -141,7 +126,6 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
             <div className="px-2 footer mt-2 d-flex align-self-end">
                 <p style={{ fontSize: '6px' }}>Setup New <br /> Sequence</p>
             </div>
-
 
             {/* Target Handle: Setup New Sequence */}
             <Handle
@@ -156,7 +140,6 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
                     border: '1px solid grey'
                 }}
             />
-
 
             {/* Source Handle: Schedule Sequence Message */}
             <div className='container'>
@@ -173,12 +156,8 @@ const SequenceNode = ({ data, id, onRemoveNode, onEditSequenceNode }) => {
                     />
                 </div>
             </div>
-
         </div>
-
-
-
     );
-};
+});
 
 export default SequenceNode;
