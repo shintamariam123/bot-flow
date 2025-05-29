@@ -192,4 +192,4 @@ const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap, 
     );
 };
 
-export default ButtonNode;
+export default React.memo(ButtonNode);

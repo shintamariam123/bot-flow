@@ -291,4 +291,4 @@ const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
   );
 };
 
-export default DefaultNode;
+export default  DefaultNode;

@@ -62,7 +62,9 @@ function FlowBuilder() {
 
   const [selectedSequenceNode, setSelectedSequenceNode] = useState(null);
   const [selectedSendMessageNode, setSelectedSendMessageNode] = useState(null);
-
+  useEffect(() => {
+        console.log('nodeContentMap reference changed');
+    }, [nodeContentMap]); 
 
   const onNodeClick = useCallback((_event, node) => { // Added useCallback
     switch (node.type) {
@@ -196,8 +198,7 @@ function FlowBuilder() {
             ...node,
             data: {
               ...node.data,
-              updateTrigger: new Date().toISOString(),
-             
+              content: content,
             },
           }
           : node
@@ -227,7 +228,6 @@ function FlowBuilder() {
             data: {
               ...node.data,
               content: content, // Pass the saved content directly to the node's data
-              updateTrigger: new Date().toISOString(), // Trigger re-render
             },
           }
           : node
@@ -322,93 +322,6 @@ function FlowBuilder() {
 
   }, [nodes, setNodes, setEdges, nodeContentMap]);
 
-
-  // Register node types, including interactiveNode
-  const nodeTypes = useMemo(() => ({
-    startBot: StartBotNode,
-    defaultNode: (nodeProps) => (
-      <DefaultNode
-        {...nodeProps}
-        nodeContentMap={nodeContentMap}
-        onRemoveNode={onRemoveNode}
-        onClose={closeDefaultNodeEditor}
-      />
-    ),
-    interactiveNode: (nodeProps) => (
-      <InteractiveNode
-        {...nodeProps}
-        nodeContentMap={nodeContentMap}
-        onRemoveNode={onRemoveNode}
-        data={{
-          ...nodeProps.data,
-          onEditInteractiveNode: handleEditInteractiveNode,
-          onClose: { setShowInteractiveEditor },
-          spawnConnectedNode: spawnConnectedNode, // ✅ pass it here
-        }}
-      />
-    ),
-    buttonNode: (nodeProps) => (
-      <ButtonNode
-        {...nodeProps}
-        nodeContentMap={nodeContentMap}
-        onRemoveNode={onRemoveNode}
-        onEditButtonNode={(id) => {
-          setSelectedNode(nodes.find(n => n.id === id));
-          setEditorType('buttonNode');
-        }}
-        onSubscribeToSequence={handleSubscribeToSequence} // Pass the handler here!
-      />
-    ),
-    listNode: (nodeProps) => (
-      <ListNode
-        {...nodeProps}
-        onRemoveNode={onRemoveNode}
-        onEditListNode={(id) => {
-          setSelectedNode(nodeProps);  // Save the selected node
-          setEditorType('listNode'); // Set the editor type
-        }} />
-    ),
-    ecommerceNode: (nodeProps) => (
-      <EcommerceNode
-        {...nodeProps}
-        onRemoveNode={onRemoveNode}
-        onEditEcommerceNode={(id) => {
-          setSelectedNode(nodeProps);  // Save the selected node
-          setEditorType('ecommerceNode'); // Set the editor type
-        }} />
-    ),
-
-    sequenceNode: (nodeProps) => (
-      <SequenceNode
-        {...nodeProps}
-        nodeContentMap={nodeContentMap}
-        onRemoveNode={onRemoveNode}
-        onEditSequenceNode={(nodeId) => {
-          const nodeToEdit = nodes.find(n => n.id === nodeId);
-          console.log('Attempting to open editor for node:', nodeToEdit);
-          setSelectedSequenceNode(nodeToEdit);
-        }}
-        data={{
-          ...nodeProps.data,
-          content: nodeContentMap[nodeProps.id] || {}, // This is key!
-        }}
-      />
-    ),
-    sendMessageAfterNode: (nodeProps) => (
-      <SendMessageAfterNode
-        {...nodeProps}
-        nodeContentMap={nodeContentMap}
-        onRemoveNode={onRemoveNode}
-        onEditSendMessageNode={(nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId))}
-         data={{
-          ...nodeProps.data,
-          content: nodeContentMap[nodeProps.id] || {}, // Pass content from map
-        }}
-        />
-   
-      ),
-
-  }), [nodeContentMap, spawnConnectedNode, onRemoveNode, nodes, handleSubscribeToSequence, handleSaveSequenceContent]); // Added handleSubscribeToSequence to dependencies
 
 
   useEffect(() => {
@@ -535,6 +448,109 @@ function FlowBuilder() {
       ? { ...node, data: { ...node.data, savedData: savedStartBotData, openEditor: openStartBotEditor } }
       : node
   );
+
+  
+  // Register node types, including interactiveNode
+const nodeTypes = useMemo(() => ({
+    startBot: StartBotNode,
+    defaultNode: (nodeProps) => (
+      <DefaultNode
+        {...nodeProps}
+        nodeContentMap={nodeContentMap}
+        onRemoveNode={onRemoveNode}
+        onClose={closeDefaultNodeEditor}
+      />
+    ),
+    interactiveNode: (nodeProps) => (
+      <InteractiveNode
+        {...nodeProps}
+        nodeContentMap={nodeContentMap}
+        onRemoveNode={onRemoveNode}
+        data={{
+          ...nodeProps.data,
+          onEditInteractiveNode: handleEditInteractiveNode,
+          onClose: () => setShowInteractiveEditor(false), // Corrected here
+          spawnConnectedNode: spawnConnectedNode,
+        }}
+      />
+    ),
+    buttonNode: (nodeProps) => (
+      <ButtonNode
+        {...nodeProps}
+        nodeContentMap={nodeContentMap}
+        onRemoveNode={onRemoveNode}
+        onEditButtonNode={(id) => {
+          setSelectedNode(nodes.find(n => n.id === id));
+          setEditorType('buttonNode');
+        }}
+        onSubscribeToSequence={handleSubscribeToSequence}
+      />
+    ),
+    listNode: (nodeProps) => (
+      <ListNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditListNode={(id) => {
+          setSelectedNode(nodeProps);
+          setEditorType('listNode');
+        }} />
+    ),
+    ecommerceNode: (nodeProps) => (
+      <EcommerceNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditEcommerceNode={(id) => {
+          setSelectedNode(nodeProps);
+          setEditorType('ecommerceNode');
+        }} />
+    ),
+
+    sequenceNode: (nodeProps) => {
+      // Memoize the content object specifically for this node
+      const content = useMemo(() => nodeContentMap[nodeProps.id] || {}, [nodeContentMap[nodeProps.id]]);
+      return (
+        <SequenceNode
+          {...nodeProps}
+          nodeContentMap={nodeContentMap}
+          onRemoveNode={onRemoveNode}
+          onEditSequenceNode={(nodeId) => {
+            const nodeToEdit = nodes.find(n => n.id === nodeId);
+            console.log('Attempting to open editor for node:', nodeToEdit);
+            setSelectedSequenceNode(nodeToEdit);
+          }}
+          data={{
+            ...nodeProps.data,
+            content: content,
+          }}
+        />
+      );
+    },
+    sendMessageAfterNode: (nodeProps) => {
+      // Memoize the content object specifically for this node
+      const content = useMemo(() => nodeContentMap[nodeProps.id] || {}, [nodeContentMap[nodeProps.id]]);
+      return (
+        <SendMessageAfterNode
+          {...nodeProps}
+          nodeContentMap={nodeContentMap}
+          onRemoveNode={onRemoveNode}
+          onEditSendMessageNode={(nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId))}
+          data={{
+            ...nodeProps.data,
+            content: content,
+          }}
+        />
+      );
+    },
+  }), [
+    nodeContentMap,
+    onRemoveNode,
+    spawnConnectedNode,
+    handleEditInteractiveNode,
+    setShowInteractiveEditor,
+    handleSubscribeToSequence,
+    nodes
+  ]);
+
 
 
   return (
