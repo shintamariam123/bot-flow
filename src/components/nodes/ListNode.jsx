@@ -94,7 +94,7 @@ const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
 
                 <div>
 
-                    <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
+                    <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
                         onClick={() => {
                             if (onEditListNode && id) {
                                 onEditListNode(id);  // Trigger the editor
@@ -110,7 +110,7 @@ const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
                 <p>Message</p>
             </div>
             <Handle
-                type="target"
+                type="target" id="list-target"
                 position={Position.Bottom}
                 style={{
                     right: 'auto', left: 0, bottom: 20, width: 10,
@@ -132,7 +132,7 @@ const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
             <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}
             >
                 Subscribe to sequence
-                <Handle type="source" position={Position.Right} id="ecommerce" style={{
+                <Handle type="source" position={Position.Right} id="list-source" style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />

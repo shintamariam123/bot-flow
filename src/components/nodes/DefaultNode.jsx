@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 
 const DefaultNode = memo(({ id, data, onRemoveNode }) => {
   const content = data.content;
-  console.log(content);
+  // console.log(content);
 
   const iconMap = {
     Text: "ic:baseline-textsms",

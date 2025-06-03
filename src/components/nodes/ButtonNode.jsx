@@ -1,41 +1,48 @@
-// ButtonNode.jsx
 import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Handle, Position } from '@xyflow/react';
 
-const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap, onSubscribeToSequence}) => {
+const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, onSubscribeToSequence }) => {
 
-    const content = nodeContentMap[id] || {};
-    // console.log('ButtonNode content:', content);
-
+    const content = data.content;
     const [showClose, setShowClose] = useState(false);
-    //   const content = nodeContentMap[id];
 
-    // Right-click handler
+    // Right-click handler to show the close button
     const handleContextMenu = (e) => {
-        e.preventDefault();  // prevent default context menu
+        e.preventDefault(); // prevent default context menu
         setShowClose(true);
     };
 
-    // Click outside the close icon or on the node (left click) hides the close icon
-    const handleClick = () => {
-        if (showClose) setShowClose(false);
+    const handleNodeClick = (e) => {
+        if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
+            return;
+        }
+        if (showClose) {
+            setShowClose(false);
+        } else {
+            onEditButtonNode?.(id);
+        }
     };
+
+    const iconMap = {
+        Button: "mdi:button-cursor",
+    };
+
 
     return (
         <div
             className={`content ${showClose ? 'node-highlighted' : ''}`}
             style={{ width: '100%', position: 'relative' }}
             onContextMenu={handleContextMenu} // show close on right click
-            onClick={handleClick} // hide close on left click
+            onClick={handleNodeClick} // Unified click handler for the node body
         >
             {showClose && (
                 <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} onClick={(e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // Prevent handleNodeClick from firing
                     if (onRemoveNode && id) {
                         onRemoveNode(id);
-                        onClose();
-                    } setShowClose(false); // hide close icon after removing
+                    }
+                    setShowClose(false); // hide close icon after removing
                 }} style={{
                     position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '6px',
                     color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
@@ -47,9 +54,8 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, nodeC
             )}
 
             <div className="p-2 d-flex flex-column align-items-center w-100">
-                {/* Your existing content */}
                 <div className="d-flex align-self-start align-items-center gap-1 mb-3">
-                    <Icon icon={[data.type || data.label]} width="10" height="10" />
+                    <Icon icon={iconMap.Button} width="10" height="10" /> {/* Use the actual icon for button */}
                     <p className="default-heading mb-0">{data.type}</p>
                 </div>
 
@@ -80,8 +86,7 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, nodeC
                     </p>
                 </div>
 
-
-
+                {/* Display content or the "click to add content" icon */}
                 {content.buttonName ? (
                     <div className='p-1 d-flex flex-column align-items-center w-100'>
                         <div className='reply-box pt-1 w-fit-content'>
@@ -90,97 +95,81 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, nodeC
                             </p>
                         </div>
                         <div className='reply-box mt-1 w-fit-content'>
-                            <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Action Type : <span style={{ color: 'black' }}>{content.actionType}</span>  </p>
+                            <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Action Type : <span style={{ color: 'black' }}>{content.actionType}</span></p>
                         </div>
 
-                        {/* Display additional info based on actionType  */}
                         {content.actionType === 'send' && (
-
                             <>
                                 {content.formData?.addLabel &&
                                     <div className='reply-box mt-1 w-fit-content'>
-                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Add Label: <span style={{ color: 'black' }}>{content.formData.addLabel}</span>  </p>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Add Label: <span style={{ color: 'black' }}>{content.formData.addLabel}</span></p>
                                     </div>}
                                 {content.formData?.removeLabel &&
                                     <div className='reply-box mt-1 w-fit-content'>
-                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Remove Label: <span style={{ color: 'black' }}>{content.formData.removeLabel}</span>  </p>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Remove Label: <span style={{ color: 'black' }}>{content.formData.removeLabel}</span></p>
                                     </div>}
                                 {content.formData?.subscribeSequence &&
                                     <div className='reply-box mt-1 w-fit-content'>
-                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Subscribe: <span style={{ color: 'black' }}>{content.formData.subscribeSequence}</span>  </p>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Subscribe: <span style={{ color: 'black' }}>{content.formData.subscribeSequence}</span></p>
                                     </div>}
                                 {content.formData?.unsubscribeSequence &&
                                     <div className='reply-box mt-1 w-fit-content'>
-                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Unsubscribe: <span style={{ color: 'black' }}>{content.formData.unsubscribeSequence}</span>  </p>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Unsubscribe: <span style={{ color: 'black' }}>{content.formData.unsubscribeSequence}</span></p>
                                     </div>}
                                 {content.formData?.assignTo &&
                                     <div className='reply-box mt-1 w-fit-content'>
-                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Assign To: <span style={{ color: 'black' }}>{content.formData.assignTo}</span>  </p>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Assign To: <span style={{ color: 'black' }}>{content.formData.assignTo}</span></p>
                                     </div>}
                                 {content.formData?.webhookURL &&
                                     <div className='reply-box mt-1 w-fit-content'>
-                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Webhook: <span style={{ color: 'black' }}>{content.formData.webhookURL}</span>  </p>
+                                        <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Webhook: <span style={{ color: 'black' }}>{content.formData.webhookURL}</span></p>
                                     </div>}
-
                             </>
                         )}
                         {content.actionType === 'flow' && content.formData?.flowName && (
                             <div className='reply-box mt-1 w-fit-content'>
-                                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Start Flow: <span style={{ color: 'black' }}>{content.formData.flowName}</span>  </p>
+                                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Start Flow: <span style={{ color: 'black' }}>{content.formData.flowName}</span></p>
                             </div>
                         )}
-
                         {content.actionType === 'system' && content.formData?.systemAction && (
                             <div className='reply-box mt-1 w-fit-content'>
-                                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>System Action: <span style={{ color: 'black' }}>{content.formData.systemAction}</span>  </p>
+                                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>System Action: <span style={{ color: 'black' }}>{content.formData.systemAction}</span></p>
                             </div>
                         )}
-
-
                     </div>
-
-
-
                 ) : (
-                    <div>
-                        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
-                            onClick={() => {
-                                if (onEditButtonNode && id) {
-                                    onEditButtonNode(id);  // Trigger the editor
-                                }
-                            }}
-                        />
+                    // Display "Click to add content" only when content is empty
+                    <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
+                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{cursor:'pointer'}} />
                     </div>
-                )
-                }
+                )}
             </div>
 
             <div className="dotted-line mt-2" />
             <div className="px-2 footer mt-3 d-flex align-self-end">
                 <p>Message</p>
             </div>
-            <Handle type="target" position={Position.Bottom} style={{
+            <Handle type="target" position={Position.Bottom}  id="button-target" style={{
                 right: 'auto', left: 0, bottom: 20, width: 10,
                 height: 10,
-                borderRadius: '50%',  // Circle
+                borderRadius: '50%',    // Circle
                 background: 'white',
                 border: '1px solid grey'
             }} />
             <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}>
                 Next
-                <Handle id='next' type="source" position={Position.Right}  style={{
+                <Handle id='next' type="source" position={Position.Right} style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />
             </div>
 
             <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}
-              onClick={(e) => {
-                    e.stopPropagation();
-                    if (onSubscribeToSequence && id) {
-                        onSubscribeToSequence(id); // Just pass the node ID
-                    }
-                 }}>
+               onClick={(e) => {
+                    e.stopPropagation(); // Stop propagation for this specific click to prevent node click
+                    // Directly call the handler without checking content.actionType or content.formData
+                    onSubscribeToSequence?.(id);
+                }}>
                 Subscribe to sequence
                 <Handle id='subscribe' type="source" position={Position.Right} style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,

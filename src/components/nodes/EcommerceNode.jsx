@@ -94,7 +94,7 @@ const EcommerceNode = React.memo(({ data, id, onEditEcommerceNode,onRemoveNode }
 
                 <div>
 
-                    <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
+                    <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
                         onClick={() => {
                             if (onEditEcommerceNode && id) {
                                 onEditEcommerceNode(id);  // Trigger the editor
@@ -111,7 +111,7 @@ const EcommerceNode = React.memo(({ data, id, onEditEcommerceNode,onRemoveNode }
             </div>
             <Handle
                 type="target"
-                position={Position.Bottom}
+                position={Position.Bottom}  id="ecommerce-target"
                 style={{
                     right: 'auto', left: 0, bottom: 20, width: 10,
                     height: 10,
@@ -129,10 +129,9 @@ const EcommerceNode = React.memo(({ data, id, onEditEcommerceNode,onRemoveNode }
                 }} />
             </div>
 
-            <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}
-            >
+            <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
                 Subscribe to sequence
-                <Handle type="source" position={Position.Right} id="ecommerce" style={{
+                <Handle type="source" position={Position.Right} id="ecommerce-source"  style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />

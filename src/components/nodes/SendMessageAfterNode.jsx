@@ -106,7 +106,7 @@ const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMes
             </>
           ) : (
             <div onClick={handleThumbIconClick}>
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )
         }
