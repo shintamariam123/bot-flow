@@ -5,7 +5,7 @@ import { FaFont, FaImage, FaCog ,FaUser} from 'react-icons/fa';
 import data from './js-data/optionsData.json';
 
 
-const InteractiveNodeEditor = ({ show, onClose, nodeId, interactiveContent, onSave }) => {
+const InteractiveNodeEditor = ({ show, onClose, nodeId, content, onSave }) => {
     const [selectedTab, setSelectedTab] = useState('text'); // 'text' or 'media'
     const [messageType, setMessageType] = useState('Custom'); // Custom or Name
     const [dropdownValue, setDropdownValue] = useState('');
@@ -19,8 +19,8 @@ const InteractiveNodeEditor = ({ show, onClose, nodeId, interactiveContent, onSa
 
     useEffect(() => {
 
-        if (!interactiveContent || !nodeId) return; // guard clause
-        const content = interactiveContent[nodeId] || {};
+        if (!content || !nodeId) return; // guard clause
+        // const content = interactiveContent[nodeId] || {};
         if (content) {
             setSelectedTab(content.type || 'text');
             setMessageType(content.messageType || 'Custom');
@@ -31,7 +31,7 @@ const InteractiveNodeEditor = ({ show, onClose, nodeId, interactiveContent, onSa
             setDelay(content.delay || 0);
             setDropText(content.body || '');
         }
-    }, [nodeId, interactiveContent]);
+    }, [nodeId, content]);
 
     const handleDropdownSelect = (item) => {
         const value = item.name || item.full_name;

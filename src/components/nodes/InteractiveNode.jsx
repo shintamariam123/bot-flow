@@ -1,44 +1,54 @@
-// components/InteractiveNode.jsx
 import React, { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-
-
-const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, onClose }) => {
+const InteractiveNode = React.memo(({ id, data }) => {
+  const { onRemoveNode, onEditInteractiveNode, onCloseInteractiveEditor, spawnConnectedNode, content } = data;
 
   const [showClose, setShowClose] = useState(false);
-  const content = nodeContentMap[id];
-  // console.log('Node Content:', content);
+
+  const isContentEmpty = !content || Object.keys(content).length === 0;
 
   // Right-click handler
   const handleContextMenu = (e) => {
-    e.preventDefault();  // prevent default context menu
+    e.preventDefault(); // prevent default context menu
     setShowClose(true);
   };
 
-  // Click outside the close icon or on the node (left click) hides the close icon
-  const handleClick = () => {
-    if (showClose) setShowClose(false);
+  // Click handler for the whole node
+  const handleNodeClick = (e) => {
+    // If the close button is showing, clicking the node body should hide it.
+    // Otherwise, it should open the editor.
+    if (showClose) {
+      setShowClose(false);
+    } else {
+      // Only trigger editor on left-click (e.button === 0)
+      if (e.type === 'click' && e.button === 0) {
+        console.log('Calling onEditInteractiveNode for ID:', id);
+         onEditInteractiveNode?.(id); // This will call the function passed from FlowBuilder
+      }
+    }
   };
+
   const iconMap = {
     Interactive: "material-symbols:interactive-space",
-
   };
 
   return (
     <>
-      <div className={`content ${showClose ? 'node-highlighted' : ''}`}
+      <div
+        className={`content ${showClose ? 'node-highlighted' : ''}`}
         style={{ width: '100%', position: 'relative' }}
         onContextMenu={handleContextMenu} // show close on right click
-        onClick={handleClick} >
+        onClick={handleNodeClick} // Handle both hiding close and opening editor
+      >
         {showClose && (
           <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
             onClick={(e) => {
-              e.stopPropagation();
+              e.stopPropagation(); // Prevent the node's onClick from firing
               if (onRemoveNode && id) {
                 onRemoveNode(id);
-                onClose();
+                onCloseInteractiveEditor();
               }
               setShowClose(false); // hide close icon after removing
             }}
@@ -56,7 +66,6 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
           <div className="d-flex align-self-start align-items-center gap-1 mb-3 p-2">
             <Icon icon={iconMap[data.type]} width="10" height="10" />
             <p className="default-heading mb-0">{data.type}</p>
-            {/* <p>interactive</p> */}
           </div>
 
           <div className="d-flex bot_flow p-1" style={{ marginBottom: '0px' }}>
@@ -85,7 +94,7 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
               0
             </p>
           </div>
-          {content ? (
+          {!isContentEmpty && (content.type === 'text' || content.type === 'media') ? (
             <div>
               {content?.type === 'text' && (
                 <div className='p-1 d-flex flex-column align-items-center w-100'>
@@ -93,13 +102,13 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
                     <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec </p>
                   </div>
                   <div className='reply-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Header Text : <span style={{ color: 'black' }}>{content.body}</span>  </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Header Text : <span style={{ color: 'black' }}>{content.body}</span>  </p>
                   </div>
                   <div className='reply-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Body : <span style={{ color: 'black' }}>{content.dropdownValue}</span>  </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Body : <span style={{ color: 'black' }}>{content.dropdownValue}</span>  </p>
                   </div>
                   <div className='reply-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Footer Text : <span style={{ color: 'black' }}>{content.footer}</span>  </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Footer Text : <span style={{ color: 'black' }}>{content.footer}</span>  </p>
                   </div>
                 </div>
 
@@ -109,36 +118,25 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
                   <div className='delay-box pt-1 w-fit-content'>
                     <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec </p>
                   </div>
-                  <div className='reply-box mt-1  w-fit-content'>
+                  <div className='reply-box mt-1  w-fit-content'>
                     <img style={{ height: '100px' }} src={content.mediaUrl} alt="node-img" />
                   </div>
                   <div className='reply-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Body : <span style={{ color: 'black' }}>{content.dropdownValue}</span>  </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Body : <span style={{ color: 'black' }}>{content.dropdownValue}</span>  </p>
                   </div>
                   <div className='reply-box mt-1 w-fit-content'>
-                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Footer Text : <span style={{ color: 'black' }}>{content.footer}</span>  </p>
+                    <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Footer Text : <span style={{ color: 'black' }}>{content.footer}</span>  </p>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div>
-
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
-                onClick={() => {
-                  data?.onEditInteractiveNode?.(id);
-                }}
-              />
+            // This 'thumb' icon will now only appear if content is empty.
+            // The node itself will open the editor on click.
+            <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
+              <Icon icon="mdi:thumb-up" width="20" height="20" color='black'  style={{cursor:'pointer'}}/>
             </div>
-          )
-
-          }
-
-
-
-
-
-
+          )}
         </div>
 
         <div className="dotted-line mt-2 mb-5" />
@@ -149,12 +147,10 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
         <Handle type="target" position={Position.Bottom} style={{
           right: 'auto', left: 0, bottom: 20, width: 10,
           height: 10,
-          borderRadius: '50%',  // Circle
+          borderRadius: '50%',  // Circle
           background: 'white',
           border: '1px solid grey'
         }} />
-
-
 
         <div className='container'>
           {/* Labels for each source handle */}
@@ -163,7 +159,7 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
             <Handle type="source" position={Position.Right} style={{
               left: 'auto', right: -10, bottom: 5, width: 10,
               height: 10,
-              borderRadius: '50%',  // Circle
+              borderRadius: '50%',  // Circle
               background: 'white',
               border: '1px solid grey'
             }} />
@@ -203,17 +199,10 @@ const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, on
               height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
             }} />
           </div>
-
-
-
         </div>
-
       </div>
-
-
     </>
-
   );
 });
 
-export default  InteractiveNode;
+export default InteractiveNode;
