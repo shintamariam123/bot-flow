@@ -11,9 +11,7 @@ function App() {
       <ReactFlowProvider>
 
         <Routes>
-
           <Route path="/" element={<FlowBuilder />} />
-
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </ReactFlowProvider>

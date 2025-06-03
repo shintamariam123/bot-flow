@@ -5,7 +5,7 @@ import { Icon } from '@iconify/react';
 
 
 
-const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap, onClose }) => {
+const InteractiveNode = React.memo(({ id, data, onRemoveNode, nodeContentMap, onClose }) => {
 
   const [showClose, setShowClose] = useState(false);
   const content = nodeContentMap[id];
@@ -214,6 +214,6 @@ const InteractiveNode = ({ id, data, onRemoveNode, nodeContentMap, onClose }) =>
     </>
 
   );
-};
+});
 
 export default  InteractiveNode;

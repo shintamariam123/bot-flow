@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 
 import { Handle, Position } from '@xyflow/react';
 
-const ListNode = ({ data, id, onEditListNode,onRemoveNode }) => {
+const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
 
     const [showClose, setShowClose] = useState(false);
     //   const content = nodeContentMap[id];
@@ -140,6 +140,6 @@ const ListNode = ({ data, id, onEditListNode,onRemoveNode }) => {
 
         </div>
     );
-};
+});
 
 export default ListNode;

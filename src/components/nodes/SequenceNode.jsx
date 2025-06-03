@@ -14,11 +14,7 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
         }
     }, [data.content]); // Dependency array: re-run when data.content changes
 
-    // Removed getCampaignName as allOptionsData is not available here
-    // If you still need to resolve campaign names from an ID,
-    // allOptionsData would need to be passed as a prop to this component,
-    // or you'd need a different way to access that data.
-    // Assuming data.content already contains the resolved campaign name.
+   
 
     // Right-click handler
     const handleContextMenu = (e) => {

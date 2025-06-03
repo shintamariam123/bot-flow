@@ -2,7 +2,7 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-const StartBotNode = ({ data }) => {
+const StartBotNode = React.memo(({ data }) => {
     const handleThumbClick = (e) => {
         e.stopPropagation();
         if (typeof data?.openEditor === 'function') {
@@ -42,7 +42,7 @@ const StartBotNode = ({ data }) => {
                     </div>
                 ) :
                     (
-                        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' onClick={handleThumbClick} style={{ cursor: 'pointer' }} />
+                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' onClick={handleThumbClick} style={{ cursor: 'pointer' }} />
 
                     )}
             </div>
@@ -59,6 +59,6 @@ const StartBotNode = ({ data }) => {
     border: '1px solid grey' }} />
         </div>
     );
-};
+});
 
 export default StartBotNode;
