@@ -4,7 +4,7 @@ import { Icon } from '@iconify/react';
 
 import { Handle, Position } from '@xyflow/react';
 
-const EcommerceNode = ({ data, id, onEditEcommerceNode,onRemoveNode }) => {
+const EcommerceNode = React.memo(({ data, id, onEditEcommerceNode,onRemoveNode }) => {
 
     const [showClose, setShowClose] = useState(false);
     //   const content = nodeContentMap[id];
@@ -140,6 +140,6 @@ const EcommerceNode = ({ data, id, onEditEcommerceNode,onRemoveNode }) => {
 
         </div>
     );
-};
+});
 
 export default EcommerceNode;

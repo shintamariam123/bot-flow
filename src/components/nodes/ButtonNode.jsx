@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import { Handle, Position } from '@xyflow/react';
 
-const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap, onSubscribeToSequence}) => {
+const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap, onSubscribeToSequence}) => {
 
     const content = nodeContentMap[id] || {};
     // console.log('ButtonNode content:', content);
@@ -190,6 +190,6 @@ const ButtonNode = ({ data, id, onEditButtonNode, onRemoveNode, nodeContentMap, 
 
         </div>
     );
-};
+});
 
-export default React.memo(ButtonNode);
+export default ButtonNode;

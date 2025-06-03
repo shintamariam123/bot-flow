@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
-
+import React, { useState, memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
-  const content = nodeContentMap?.[id];
-  // console.log('Node Content:', content);
+const DefaultNode = memo(({ id, data, onRemoveNode }) => {
+  const content = data.content;
+  console.log(content);
 
   const iconMap = {
     Text: "ic:baseline-textsms",
@@ -18,84 +17,103 @@ const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
   };
   const [showClose, setShowClose] = useState(false);
 
-  // Right-click handler
   const handleContextMenu = (e) => {
-    e.preventDefault();  // prevent default context menu
+    e.preventDefault();
     setShowClose(true);
   };
 
-  // Click outside the close icon or on the node (left click) hides the close icon
   const handleClick = () => {
     if (showClose) setShowClose(false);
   };
 
-
   const renderContent = () => {
+    // Check if content exists AND if it has any meaningful data for the specific type
+    // This handles cases where 'content' object might be empty or specific fields are missing
+    if (!content || Object.keys(content).length === 0 ||
+      (data.type === 'Text' && !content.text && !content.delay) ||
+      (data.type === 'Image' && !content.image && !content.delay) ||
+      (data.type === 'Video' && !content.video && !content.delay) ||
+      (data.type === 'Audio' && !content.audio && !content.delay) ||
+      (data.type === 'File' && (!content.file || (!content.file.url && !content.file.type)) && !content.delay) ||
+      (data.type === 'Location' && !content.text && !content.delay) ||
+      (data.type === 'Whatsapp' && !content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && !content.delay)
+    ) {
+      return (
+        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+      );
+    }
+
+    // If content exists and has data, proceed with the switch case
     switch (data.type) {
       case 'Text':
-        if (content?.type) {
-          return (
-            <div className='p-1 d-flex flex-column align-items-center w-100'>
+        return (
+          <div className='p-1 d-flex flex-column align-items-center w-100'>
+            {content.delay !== undefined && (
               <div className='delay-box pt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec </p>
+                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec </p>
               </div>
+            )}
+            {content.text && (
               <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span>  </p>
+                <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span> </p>
               </div>
-            </div>
-
-          );
-        }
-        break;
+            )}
+            {(!content.text && content.delay === undefined) && (
+              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+            )}
+          </div>
+        );
       case 'Image':
-        if (content?.image) {
-          return (
-            <div className='p-1 d-flex flex-column align-items-center w-100'>
-              <div className='delay-box pt-1  w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec</p>
+        return (
+          <div className='p-1 d-flex flex-column align-items-center w-100'>
+            {content.delay !== undefined && (
+              <div className='delay-box pt-1 w-fit-content'>
+                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec</p>
               </div>
-              <div className='reply-box mt-1  w-fit-content'>
-                <img src={content.image} alt="node-img" />
-              </div>
-            </div>
-          );
-        }
-        break;
+            )}
+            {content.image ?
+              <div className='reply-box mt-1 w-fit-content'>
+
+                <img src={content.image} alt="node-img" /></div> :
+              ((!content.image && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+          </div>
+        );
       case 'Video':
-        if (content?.video) {
-          return (
-            <div className='p-1 d-flex flex-column align-items-center w-100'>
-              <div className='delay-box pt-1  w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec</p>
+        return (
+          <div className='p-1 d-flex flex-column align-items-center w-100'>
+            {content.delay !== undefined && (
+              <div className='delay-box pt-1 w-fit-content'>
+                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec</p>
               </div>
-              <div className='reply-box mt-1  w-fit-content'>
-                <video controls >
+            )}
+            {content.video ? (
+              <div className='reply-box mt-1 w-fit-content'>
+                <video controls style={{ width: '150px', height: '100px' }}>
                   <source src={content.video} type="video/mp4" />
                   Your browser does not support the video element.
                 </video>
-
               </div>
-            </div>
-          );
-        }
-        break;
+            ) : ((!content.video && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+          </div>
+        );
       case 'Audio':
-        if (content?.audio) {
-          return (
-            <div className='p-1 d-flex flex-column align-items-center w-100'>
-              <div className='delay-box  w-fit-content pt-1'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec</p>
+        return (
+          <div className='p-1 d-flex flex-column align-items-center w-100'>
+            {content.delay !== undefined && (
+              <div className='delay-box w-fit-content pt-1'>
+                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec</p>
               </div>
-              <div className='reply-box mt-1  w-fit-content'>
+            )}
+            {content.audio ? (
+              <div className='reply-box mt-1 w-fit-content'>
                 <audio controls style={{ width: '100px', height: '30px' }}>
                   <source src={content.audio} type="audio/mpeg" />
                   Your browser does not support the audio element.
                 </audio>
               </div>
-            </div>
-          );
-        }
-        break;
+            ) : ((!content.audio && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+          </div>
+        );
       case 'File':
         if (content?.file?.url && content?.file?.type) {
           const fileUrl = content.file.url;
@@ -104,9 +122,11 @@ const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
           if (fileType === 'application/pdf') {
             return (
               <div className='p-1 d-flex flex-column align-items-center w-100'>
-                <div className='delay-box w-fit-content pt-1'>
-                  <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec</p>
-                </div>
+                {content.delay !== undefined && (
+                  <div className='delay-box w-fit-content pt-1'>
+                    <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec</p>
+                  </div>
+                )}
                 <div className='mt-1 reply-box w-fit-content'>
                   <iframe
                     src={fileUrl}
@@ -119,9 +139,11 @@ const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
           } else if (fileType.startsWith('image/')) {
             return (
               <div className='d-flex flex-column'>
-                <div className='delay-box pt-1'>
-                  <p style={{ fontSize: '8px' }}>Delay: {content.delay} sec</p>
-                </div>
+                {content.delay !== undefined && (
+                  <div className='delay-box pt-1'>
+                    <p style={{ fontSize: '8px' }}>Delay: {content.delay || 0} sec</p>
+                  </div>
+                )}
                 <div className='mt-1'>
                   <img src={fileUrl} alt={content.file.name} style={{ maxWidth: '100px' }} />
                 </div>
@@ -130,103 +152,118 @@ const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
           } else {
             return (
               <div className='d-flex flex-column'>
-                <div className='delay-box pt-1'>
-                  <p style={{ fontSize: '8px' }}>Delay: {content.delay} sec</p>
-                </div>
+                {content.delay !== undefined && (
+                  <div className='delay-box pt-1'>
+                    <p style={{ fontSize: '8px' }}>Delay: {content.delay || 0} sec</p>
+                  </div>
+                )}
                 <div className='mt-1'>
                   <p style={{ fontSize: '8px' }}>Cannot preview this file type</p>
                   <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                    <p style={{ fontSize: '8px', textDecoration: 'underline' }}>{content.file.name}</p>
+                    <p style={{ fontSize: '8px', textDecoration: 'underline' }}>{content.file.name || 'File'}</p>
                   </a>
                 </div>
               </div>
             );
           }
         }
-        break;
+        return <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />; // Fallback for file with no URL/type or content.delay === undefined
       case 'Location':
-        if (content?.type) {
-          return (
-            <div className='p-1 d-flex flex-column align-items-center w-100'>
+        return (
+          <div className='p-1 d-flex flex-column align-items-center w-100'>
+            {content.delay !== undefined && (
               <div className='delay-box pt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec </p>
+                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec </p>
               </div>
+            )}
+            {content.text && (
               <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span>  </p>
+                <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span> </p>
               </div>
-            </div>
-
-          );
-        }
-        break;
+            )}
+            {(!content.text && content.delay === undefined) && (
+              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+            )}
+          </div>
+        );
       case 'Whatsapp':
-        if (content?.type) {
-          return (
-            <div className='p-1 d-flex flex-column align-items-center w-100'>
+        return (
+          <div className='p-1 d-flex flex-column align-items-center w-100'>
+            {content.delay !== undefined && (
               <div className='delay-box pt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay} sec </p>
+                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay: {content.delay || 0} sec </p>
               </div>
-              <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Selected Whatsapp Flow: <span style={{ color: 'black' }}>{content.flowType}</span>  </p>
-              </div>
-              <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Header: <span style={{ color: 'black' }}>{content.field1}</span>  </p>
-
-              </div>
-              <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Body: <span style={{ color: 'black' }}>{content.field2}</span>  </p>
-
-              </div>
-              <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Footer: <span style={{ color: 'black' }}>{content.field3}</span>  </p>
-
-              </div>
-              <div className='reply-box mt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: "grey" }}>Message Button Text: <span style={{ color: 'black' }}>{content.field4}</span>  </p>
-
-              </div>
-
-
-            </div>
-
-          );
-        }
-        break;
+            )}
+            {(content.flowType || content.field1 || content.field2 || content.field3 || content.field4) ? (
+              <>
+                {content.flowType && (
+                  <div className='reply-box mt-1 w-fit-content'>
+                    <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Selected Whatsapp Flow: <span style={{ color: 'black' }}>{content.flowType}</span> </p>
+                  </div>
+                )}
+                {content.field1 && (
+                  <div className='reply-box mt-1 w-fit-content'>
+                    <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Message Header: <span style={{ color: 'black' }}>{content.field1}</span> </p>
+                  </div>
+                )}
+                {content.field2 && (
+                  <div className='reply-box mt-1 w-fit-content'>
+                    <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Message Body: <span style={{ color: 'black' }}>{content.field2}</span> </p>
+                  </div>
+                )}
+                {content.field3 && (
+                  <div className='reply-box mt-1 w-fit-content'>
+                    <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Message Footer: <span style={{ color: 'black' }}>{content.field3}</span> </p>
+                  </div>
+                )}
+                {content.field4 && (
+                  <div className='reply-box mt-1 w-fit-content'>
+                    <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Message Button Text: <span style={{ color: 'black' }}>{content.field4}</span> </p>
+                  </div>
+                )}
+              </>
+            ) : ((!content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+          </div>
+        );
       default:
-        return null;
+        // This default case will now only trigger if data.type is not recognized,
+        // and if content is empty or has no relevant data.
+        return (
+          <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+        );
     }
-
-
-
-    return (
-      <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
-    );
   };
 
   return (
     <div
       className={`content ${showClose ? 'node-highlighted' : ''}`}
       style={{ width: '100%', position: 'relative' }}
-      onContextMenu={handleContextMenu} // show close on right click
-      onClick={handleClick} // hide close on left click
+      onContextMenu={handleContextMenu}
+      onClick={handleClick}
     >
       {showClose && (
-        <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} onClick={(e) => {e.stopPropagation();
+        <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
             if (onRemoveNode && id) {
               onRemoveNode(id);
-              onClose();
-            } setShowClose(false); // hide close icon after removing
-          }} style={{ position: 'absolute',top: -8,   right: -6, cursor: 'pointer', fontSize: '6px',
-            color: 'black',zIndex: 10,userSelect: 'none',border:'1px solid black',borderRadius:'50%'
+              if (data.onCloseEditor) {
+                data.onCloseEditor();
+              }
+            }
+            setShowClose(false);
+          }}
+          style={{
+            position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '6px',
+            color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
           }}
           title="Remove node"
         >
-            <Icon icon="ic:baseline-close" width="10" height="10"/>
+          <Icon icon="ic:baseline-close" width="10" height="10" />
         </div>
       )}
 
       <div className="p-2 d-flex flex-column align-items-center w-100">
-        {/* Your existing content */}
         <div className="d-flex align-self-start align-items-center gap-1 mb-3">
           <Icon icon={iconMap[data.type || data.label]} width="10" height="10" />
           <p className="default-heading mb-0">{data.type}</p>
@@ -272,23 +309,27 @@ const DefaultNode = ({ id, onClose,data, nodeContentMap, onRemoveNode }) => {
       <Handle
         type="target"
         position={Position.Bottom}
-        style={{ right: 'auto', left: 0, bottom: 20, width: 10,
-    height: 10,
-    borderRadius: '50%',  // Circle
-    background: 'white',
-    border: '1px solid grey'  }}
+        style={{
+          right: 'auto', left: 0, bottom: 20, width: 10,
+          height: 10,
+          borderRadius: '50%',
+          background: 'white',
+          border: '1px solid black'
+        }}
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ left: 'auto', right: -10, bottom: 20 , width: 10,
-    height: 10,
-    borderRadius: '50%',  // Circle
-    background: 'white',
-    border: '1px solid grey' }}
+        style={{
+          left: 'auto', right: -10, bottom: 20, width: 10,
+          height: 10,
+          borderRadius: '50%',
+          background: 'white',
+          border: '1px solid black'
+        }}
       />
     </div>
   );
-};
+});
 
-export default  DefaultNode;
+export default DefaultNode;

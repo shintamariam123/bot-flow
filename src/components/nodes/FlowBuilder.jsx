@@ -7,7 +7,7 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  useReactFlow // Import useReactFlow to get screenToFlowPosition
+  useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -30,7 +30,6 @@ import SequenceEditor from '../editors/SequenceEditor';
 import SendMessageAfterNode from './SendMessageAfterNode';
 import SendMessageAfterEditor from '../editors/SendMessageAfterEditor';
 
-
 let id = 1;
 const getId = () => `node_${id++}`;
 
@@ -47,6 +46,8 @@ function FlowBuilder() {
   const { screenToFlowPosition } = useReactFlow();
 
   const [savedStartBotData, setSavedStartBotData] = useState(null);
+  // nodeContentMap will still be used to store content that might not be directly in node.data (e.g., for editors)
+  // but for the nodes themselves, node.data.content will be the source of truth for display.
   const [nodeContentMap, setNodeContentMap] = useState({});
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -57,16 +58,18 @@ function FlowBuilder() {
   const [showInteractiveEditor, setShowInteractiveEditor] = useState(false);
   const [activeInteractiveNodeId, setActiveInteractiveNodeId] = useState(null);
 
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(null); // Used for Button, List, Ecommerce
   const [editorType, setEditorType] = useState(null);
 
   const [selectedSequenceNode, setSelectedSequenceNode] = useState(null);
   const [selectedSendMessageNode, setSelectedSendMessageNode] = useState(null);
-  useEffect(() => {
-        console.log('nodeContentMap reference changed');
-    }, [nodeContentMap]); 
 
-  const onNodeClick = useCallback((_event, node) => { // Added useCallback
+  // The console log below isn't strictly necessary for functionality, but good for debugging.
+  // useEffect(() => {
+  //   console.log('nodeContentMap reference changed');
+  // }, [nodeContentMap]);
+
+  const onNodeClick = useCallback((_event, node) => {
     switch (node.type) {
       case 'defaultNode':
         setSelectedDefaultNode(node);
@@ -76,10 +79,17 @@ function FlowBuilder() {
         setEditorType('buttonNode');
         break;
       case 'interactiveNode':
-      case 'button':
-      case 'list':
-      case 'ecommerce':
-        handleEditInteractiveNode(node.id);
+        // Interactive nodes should set their own ID to activeInteractiveNodeId
+        setActiveInteractiveNodeId(node.id);
+        setShowInteractiveEditor(true);
+        break;
+      case 'listNode': // Added for ListNode
+        setSelectedNode(node);
+        setEditorType('listNode');
+        break;
+      case 'ecommerceNode': // Added for EcommerceNode
+        setSelectedNode(node);
+        setEditorType('ecommerceNode');
         break;
       case 'startBot':
         setShowStartEditor(true);
@@ -93,21 +103,55 @@ function FlowBuilder() {
       default:
         break;
     }
-  }, []); // Empty dependency array as it only sets state based on clicked node properties
+  }, []);
 
+  // Handler for saving DefaultNodeEditor content
+  const handleSaveDefaultNodeContent = useCallback((nodeId, content) => {
+    console.log(`Saving DefaultNode content for ${nodeId}:`, content);
 
-  const handleSaveInteractiveContent = (nodeId, content) => {
+    // Update nodeContentMap (for other components that might still rely on it, though less critical for DefaultNode display now)
     setNodeContentMap(prev => ({
       ...prev,
       [nodeId]: content,
     }));
-  };
 
+    // Update the 'nodes' state to reflect the new content
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                content: content, // This is crucial: store the content directly in node.data
+              },
+            }
+          : node
+      )
+    );
+  }, [setNodes, setNodeContentMap]);
 
-  const handleEditInteractiveNode = (id) => {
-    setActiveInteractiveNodeId(id);
-    setShowInteractiveEditor(true);
-  };
+  // Unified handler for saving content for interactive, button, list, ecommerce, etc.
+  const handleSaveNodeContent = useCallback((nodeId, content) => {
+    setNodeContentMap(prev => ({
+      ...prev,
+      [nodeId]: content,
+    }));
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                content: content,
+              },
+            }
+          : node
+      )
+    );
+  }, [setNodes, setNodeContentMap]);
+
 
   const navigate = useNavigate();
 
@@ -117,28 +161,28 @@ function FlowBuilder() {
       button: 'buttonNode',
       list: 'listNode',
       ecommerce: 'ecommerceNode',
+      // Ensure other types handled here match your node definitions if needed
     };
-    // Get the source node to position the new node relative to it
+
     const sourceNode = nodes.find(node => node.id === sourceNodeId);
     let newPosition = { x: 0, y: 0 };
     if (sourceNode) {
       newPosition = {
-        x: sourceNode.position.x + 300, // Position to the right of the source node
+        x: sourceNode.position.x + 300,
         y: sourceNode.position.y,
       };
     } else {
-      // Fallback if sourceNode is not found (e.g., if somehow a node calls this without being on canvas)
       newPosition = { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 };
     }
 
     const newNode = {
       id: newNodeId,
-      type: nodeTypeMap[type] || 'defaultNode',
+      type: nodeTypeMap[type] || 'defaultNode', // Fallback to defaultNode if type not found
       position: newPosition,
       data: {
         label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
-        type,
-        ...nodeContentMap[newNodeId] || {},
+        type, // e.g., 'button', 'list', 'text', 'image'
+        content: {}, // Initialize content as an empty object for new nodes
       },
     };
 
@@ -152,120 +196,63 @@ function FlowBuilder() {
 
     setNodes((nds) => [...nds, newNode]);
     setEdges((eds) => [...eds, newEdge]);
-  }, [setNodes, setEdges, nodes, nodeContentMap]); // Added nodes to dependency array
+  }, [setNodes, setEdges, nodes]); // removed nodeContentMap from dependencies here, as content is initialized as empty object
 
 
-  const handleSaveButtonContent = (id, content) => {
-    console.log('Saving content for ButtonNode:', id, content);
-
-    setNodeContentMap(prev => ({
-      ...prev,
-      [id]: content,
-    }));
-
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === id
-          ? {
-            ...node,
-            data: {
-              ...node.data,
-              updateTrigger: new Date().toISOString(),
-            },
-          }
-          : node
-      )
-    );
-  };
-
-  // NEW: Handler for saving SequenceEditor content
   const handleSaveSequenceContent = useCallback((content) => {
-    if (!selectedSequenceNode) return; // Ensure a node is selected
-
-    const nodeId = selectedSequenceNode.id;
-
-    // Update the nodeContentMap with the new content for this node
-    setNodeContentMap(prev => ({
-      ...prev,
-      [nodeId]: content,
-    }));
-
-
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId
-          ? {
-            ...node,
-            data: {
-              ...node.data,
-              content: content,
-            },
-          }
-          : node
-      )
-    );
-
-    // Close the editor after saving
+    if (!selectedSequenceNode) return;
+    handleSaveNodeContent(selectedSequenceNode.id, content); // Use unified handler
     setSelectedSequenceNode(null);
-  }, [selectedSequenceNode, setNodeContentMap, setNodes]);
+  }, [selectedSequenceNode, handleSaveNodeContent]);
 
- // NEW: Handler for saving SendMessageAfterEditor content
   const handleSaveSendMessageContent = useCallback((content) => {
     if (!selectedSendMessageNode) return;
-
-    const nodeId = selectedSendMessageNode.id;
-
-    setNodeContentMap(prev => ({
-      ...prev,
-      [nodeId]: content,
-    }));
-
-    setNodes((nds) =>
-      nds.map((node) =>
-        node.id === nodeId
-          ? {
-            ...node,
-            data: {
-              ...node.data,
-              content: content, // Pass the saved content directly to the node's data
-            },
-          }
-          : node
-      )
-    );
-
-    setSelectedSendMessageNode(null); // Close the editor
-  }, [selectedSendMessageNode, setNodeContentMap, setNodes]);
+    handleSaveNodeContent(selectedSendMessageNode.id, content); // Use unified handler
+    setSelectedSendMessageNode(null);
+  }, [selectedSendMessageNode, handleSaveNodeContent]);
 
 
-  const onRemoveNode = (nodeId) => {
+  const onRemoveNode = useCallback((nodeId) => {
     setNodes((nds) => nds.filter((node) => node.id !== nodeId));
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
 
-
+    // Also remove from nodeContentMap if still used for other purposes
     setNodeContentMap((prev) => {
       const updated = { ...prev };
       delete updated[nodeId];
       return updated;
     });
-  };
+    // Ensure the editor closes if the selected node is removed
+    if (selectedDefaultNode && selectedDefaultNode.id === nodeId) {
+      setSelectedDefaultNode(null);
+    }
+    if (activeInteractiveNodeId === nodeId) {
+      setActiveInteractiveNodeId(null);
+      setShowInteractiveEditor(false);
+    }
+    if (selectedNode && selectedNode.id === nodeId) {
+      setSelectedNode(null);
+      setEditorType(null);
+    }
+    if (selectedSequenceNode && selectedSequenceNode.id === nodeId) {
+      setSelectedSequenceNode(null);
+    }
+    if (selectedSendMessageNode && selectedSendMessageNode.id === nodeId) {
+      setSelectedSendMessageNode(null);
+    }
+  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode]);
 
-  // --- ADDED FUNCTION: handleSubscribeToSequence (spawns new sequence and connects) ---
   const handleSubscribeToSequence = useCallback((buttonNodeId) => {
     const buttonNode = nodes.find(node => node.id === buttonNodeId);
-    if (!buttonNode) {
-      console.error('ButtonNode not found:', buttonNodeId);
-      return;
-    }
+    if (!buttonNode) { console.error('ButtonNode not found:', buttonNodeId); return; }
 
     const newNodes = [];
     const newEdges = [];
 
-    // 1. Create the new SequenceNode
     const sequenceNodeId = getId();
     const sequenceNodePosition = {
-      x: buttonNode.position.x + 300, // To the right of the button node
-      y: buttonNode.position.y + 50, // Slightly below for visual separation
+      x: buttonNode.position.x + 300,
+      y: buttonNode.position.y + 50,
     };
     const sequenceNode = {
       id: sequenceNodeId,
@@ -273,27 +260,25 @@ function FlowBuilder() {
       position: sequenceNodePosition,
       data: {
         label: `New Sequence from Button`,
-        ...nodeContentMap[sequenceNodeId] || {},
+        content: {}, // Initialize content as empty object
       },
     };
     newNodes.push(sequenceNode);
 
-    // 2. Connect ButtonNode to the newly spawned SequenceNode
     newEdges.push({
       id: `e-${buttonNodeId}-${sequenceNodeId}-button-subscribe`,
       source: buttonNodeId,
-      sourceHandle: 'subscribe', // The handle from ButtonNode.jsx
+      sourceHandle: 'subscribe',
       target: sequenceNodeId,
-      targetHandle: 'subscribe-target', // The target handle you need to define in SequenceNode.jsx
+      targetHandle: 'subscribe-target',
       type: 'smoothstep',
     });
 
-    // 3. Create 3 SendMessageAfterNodes and connect them to the new SequenceNode
     for (let i = 0; i < 3; i++) {
       const sendMessageNodeId = getId();
       const sendMessageNodePosition = {
-        x: sequenceNodePosition.x + 300, // To the right of the sequence node
-        y: sequenceNodePosition.y + (i * 180) - 50, // Stack vertically
+        x: sequenceNodePosition.x + 300,
+        y: sequenceNodePosition.y + (i * 180) - 50,
       };
       const sendMessageNode = {
         id: sendMessageNodeId,
@@ -301,18 +286,17 @@ function FlowBuilder() {
         position: sendMessageNodePosition,
         data: {
           label: `Send Message After ${i + 1}`,
-          ...nodeContentMap[sendMessageNodeId] || {},
+          content: {}, // Initialize content as empty object
         },
       };
       newNodes.push(sendMessageNode);
 
-      // Connect SequenceNode's source handle to SendMessageAfterNode's target handle
       newEdges.push({
         id: `e-${sequenceNodeId}-schedule-sequence-msg-${sendMessageNodeId}-send-after-${i}`,
         source: sequenceNodeId,
-        sourceHandle: 'schedule-sequence-msg', // This handle needs to be defined in SequenceNode.jsx
+        sourceHandle: 'schedule-sequence-msg',
         target: sendMessageNodeId,
-        targetHandle: 'send-after', // This handle needs to be defined in SendMessageAfterNode.jsx
+        targetHandle: 'send-after',
         type: 'smoothstep',
       });
     }
@@ -320,8 +304,7 @@ function FlowBuilder() {
     setNodes((nds) => [...nds, ...newNodes]);
     setEdges((eds) => [...eds, ...newEdges]);
 
-  }, [nodes, setNodes, setEdges, nodeContentMap]);
-
+  }, [nodes, setNodes, setEdges]); // Removed nodeContentMap from dependencies here
 
 
   useEffect(() => {
@@ -334,7 +317,6 @@ function FlowBuilder() {
     );
   }, [savedStartBotData, setNodes]);
 
-  // Handle connections: spawn new defaultNode if from interactiveNode's handle
   const onConnect = useCallback(
     (params) => {
       setEdges((eds) => addEdge(params, eds));
@@ -342,33 +324,29 @@ function FlowBuilder() {
     [setEdges]
   );
 
-  // Drop new nodes: parse JSON from Toolbar drag
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-      const data = event.dataTransfer.getData('application/reactflow');
+      const dataTransferData = event.dataTransfer.getData('application/reactflow');
 
       let nodeType = 'defaultNode';
       let contentType = '';
       try {
-        const parsed = JSON.parse(data);
+        const parsed = JSON.parse(dataTransferData);
         nodeType = parsed.nodeType;
         contentType = parsed.contentType;
       } catch (e) {
-        contentType = data; // Fallback
+        contentType = dataTransferData;
       }
 
-      // Use screenToFlowPosition for accurate dropping
       const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
-      // Use interactiveNode if it's one of the interactive subtypes
       if (['button', 'list', 'ecommerce'].includes(contentType.toLowerCase())) {
         nodeType = `${contentType.toLowerCase()}Node`;
       }
 
       const newNodeId = getId();
 
-      // Special handling for SequenceNode: automatically connect 3 SendMessageAfterNodes
       if (nodeType === 'sequenceNode') {
         const sequenceNode = {
           id: newNodeId,
@@ -376,19 +354,18 @@ function FlowBuilder() {
           position,
           data: {
             label: 'Sequence Node',
-            ...nodeContentMap[newNodeId] || {},
+            content: {}, // Initialize content as an empty object
           },
         };
 
         const newNodes = [sequenceNode];
         const newEdges = [];
 
-        // Create 3 SendMessageAfterNodes and connect them
         for (let i = 0; i < 3; i++) {
           const sendMessageNodeId = getId();
           const sendMessageNodePosition = {
-            x: position.x + 300, // Position to the right of the sequence node
-            y: position.y + (i * 180) - 50, // Stack vertically
+            x: position.x + 300,
+            y: position.y + (i * 180) - 50,
           };
           const sendMessageNode = {
             id: sendMessageNodeId,
@@ -396,12 +373,11 @@ function FlowBuilder() {
             position: sendMessageNodePosition,
             data: {
               label: `Send Message After ${i + 1}`,
-              ...nodeContentMap[sendMessageNodeId] || {},
+              content: {}, // Initialize content as an empty object
             },
           };
           newNodes.push(sendMessageNode);
 
-          // Connect SequenceNode's source handle to SendMessageAfterNode's target handle
           newEdges.push({
             id: `e-${newNodeId}-schedule-sequence-msg-${sendMessageNodeId}-send-after`,
             source: newNodeId,
@@ -411,24 +387,24 @@ function FlowBuilder() {
             type: 'smoothstep',
           });
         }
-
         setNodes((nds) => nds.concat(newNodes));
         setEdges((eds) => eds.concat(newEdges));
-
       } else {
         const newNode = {
           id: newNodeId,
           type: nodeType,
           position,
           data: {
-            type: contentType,
-            ...nodeContentMap[newNodeId] || {},
+            type: contentType, // This should be the 'Text', 'Image', etc. from toolbar
+            content: {}, // Always initialize content as an empty object for new nodes
+            onRemoveNode: onRemoveNode,
+            onCloseEditor: closeDefaultNodeEditor,
           },
         };
-        setNodes((nds) => nds.concat({ ...newNode, id: newNodeId }));
+        setNodes((nds) => nds.concat(newNode));
       }
     },
-    [setNodes, setEdges, nodeContentMap, screenToFlowPosition] // Added screenToFlowPosition to dependencies
+    [setNodes, setEdges, screenToFlowPosition, onRemoveNode] // Removed nodeContentMap from dependencies here
   );
 
   const onDragOver = useCallback((event) => {
@@ -436,11 +412,8 @@ function FlowBuilder() {
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
-
   const openStartBotEditor = () => setShowStartEditor(true);
   const closeStartBotEditor = () => setShowStartEditor(false);
-
-
   const closeDefaultNodeEditor = () => setSelectedDefaultNode(null);
 
   const updatedNodes = nodes.map((node) =>
@@ -449,35 +422,35 @@ function FlowBuilder() {
       : node
   );
 
-  
-  // Register node types, including interactiveNode
-const nodeTypes = useMemo(() => ({
+  // Register node types
+  const nodeTypes = useMemo(() => ({
     startBot: StartBotNode,
-    defaultNode: (nodeProps) => (
-      <DefaultNode
-        {...nodeProps}
-        nodeContentMap={nodeContentMap}
-        onRemoveNode={onRemoveNode}
-        onClose={closeDefaultNodeEditor}
-      />
-    ),
+    // DefaultNode now directly consumes node.data.content
+    defaultNode: DefaultNode,
     interactiveNode: (nodeProps) => (
       <InteractiveNode
         {...nodeProps}
-        nodeContentMap={nodeContentMap}
+        // nodeContentMap is no longer the primary source for DefaultNode's display,
+        // but can be passed for other reasons if needed within the component itself.
+        // The display content should come from nodeProps.data.content
         onRemoveNode={onRemoveNode}
         data={{
           ...nodeProps.data,
-          onEditInteractiveNode: handleEditInteractiveNode,
-          onClose: () => setShowInteractiveEditor(false), // Corrected here
+          onEditInteractiveNode: () => {
+            setActiveInteractiveNodeId(nodeProps.id); // Set the active ID for the editor
+            setShowInteractiveEditor(true);
+          },
+          onClose: () => setShowInteractiveEditor(false),
           spawnConnectedNode: spawnConnectedNode,
+          // content is already in nodeProps.data.content, so no need to pass it separately
         }}
       />
     ),
     buttonNode: (nodeProps) => (
       <ButtonNode
         {...nodeProps}
-        nodeContentMap={nodeContentMap}
+        // nodeContentMap is no longer the primary source for ButtonNode's display.
+        // Display content should come from nodeProps.data.content
         onRemoveNode={onRemoveNode}
         onEditButtonNode={(id) => {
           setSelectedNode(nodes.find(n => n.id === id));
@@ -491,66 +464,47 @@ const nodeTypes = useMemo(() => ({
         {...nodeProps}
         onRemoveNode={onRemoveNode}
         onEditListNode={(id) => {
-          setSelectedNode(nodeProps);
+          setSelectedNode(nodes.find(n => n.id === id)); // Find the actual node object
           setEditorType('listNode');
-        }} />
+        }}
+      />
     ),
     ecommerceNode: (nodeProps) => (
       <EcommerceNode
         {...nodeProps}
         onRemoveNode={onRemoveNode}
         onEditEcommerceNode={(id) => {
-          setSelectedNode(nodeProps);
+          setSelectedNode(nodes.find(n => n.id === id)); // Find the actual node object
           setEditorType('ecommerceNode');
-        }} />
+        }}
+      />
     ),
-
-    sequenceNode: (nodeProps) => {
-      // Memoize the content object specifically for this node
-      const content = useMemo(() => nodeContentMap[nodeProps.id] || {}, [nodeContentMap[nodeProps.id]]);
-      return (
-        <SequenceNode
-          {...nodeProps}
-          nodeContentMap={nodeContentMap}
-          onRemoveNode={onRemoveNode}
-          onEditSequenceNode={(nodeId) => {
-            const nodeToEdit = nodes.find(n => n.id === nodeId);
-            console.log('Attempting to open editor for node:', nodeToEdit);
-            setSelectedSequenceNode(nodeToEdit);
-          }}
-          data={{
-            ...nodeProps.data,
-            content: content,
-          }}
-        />
-      );
-    },
-    sendMessageAfterNode: (nodeProps) => {
-      // Memoize the content object specifically for this node
-      const content = useMemo(() => nodeContentMap[nodeProps.id] || {}, [nodeContentMap[nodeProps.id]]);
-      return (
-        <SendMessageAfterNode
-          {...nodeProps}
-          nodeContentMap={nodeContentMap}
-          onRemoveNode={onRemoveNode}
-          onEditSendMessageNode={(nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId))}
-          data={{
-            ...nodeProps.data,
-            content: content,
-          }}
-        />
-      );
-    },
+    sequenceNode: (nodeProps) => (
+      <SequenceNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditSequenceNode={(nodeId) => {
+          const nodeToEdit = nodes.find(n => n.id === nodeId);
+          console.log('Attempting to open editor for node:', nodeToEdit);
+          setSelectedSequenceNode(nodeToEdit);
+        }}
+        // content is already in nodeProps.data.content, so no need to pass it separately
+      />
+    ),
+    sendMessageAfterNode: (nodeProps) => (
+      <SendMessageAfterNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditSendMessageNode={(nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId))}
+        // content is already in nodeProps.data.content, so no need to pass it separately
+      />
+    ),
   }), [
-    nodeContentMap,
+    nodes, // Added nodes to dependencies as node type functions might need it to find specific nodes
     onRemoveNode,
     spawnConnectedNode,
-    handleEditInteractiveNode,
-    setShowInteractiveEditor,
     handleSubscribeToSequence,
-    nodes
   ]);
-
 
 
   return (
@@ -558,13 +512,13 @@ const nodeTypes = useMemo(() => ({
       <Toolbar
         nodes={nodes}
         edges={edges}
-        nodeContentMap={nodeContentMap}
+        nodeContentMap={nodeContentMap} // Keep for now if toolbar needs to access it
         savedStartBotData={savedStartBotData}
         setNodes={setNodes}
         setEdges={setEdges}
-        setNodeContentMap={setNodeContentMap}
+        setNodeContentMap={setNodeContentMap} // Keep for now if toolbar modifies it
         setSavedStartBotData={setSavedStartBotData}
-        onDashboardClick={() => navigate('/dashboard')} // Pass navigate fn
+        onDashboardClick={() => navigate('/dashboard')}
       />
       <div style={{ width: '100%', height: '90%' }}>
         <ReactFlow
@@ -595,21 +549,25 @@ const nodeTypes = useMemo(() => ({
       <DefaultNodeEditor
         node={selectedDefaultNode}
         onClose={closeDefaultNodeEditor}
-        nodeContentMap={nodeContentMap}
-        setNodeContentMap={setNodeContentMap}
-        onRemoveNode={onRemoveNode}
+        onSave={handleSaveDefaultNodeContent}
       />
+      {/* InteractiveNodeEditor should fetch content from the node's data.content directly */}
       <InteractiveNodeEditor
         show={showInteractiveEditor}
-        onClose={() => setShowInteractiveEditor(false)}
+        onClose={() => {
+          setShowInteractiveEditor(false);
+          setActiveInteractiveNodeId(null); // Clear active node when closing
+        }}
         nodeId={activeInteractiveNodeId}
-        content={nodeContentMap[activeInteractiveNodeId] || {}}
-        onSave={handleSaveInteractiveContent}
+        // Fetch content directly from the node's data
+        content={nodes.find(n => n.id === activeInteractiveNodeId)?.data?.content || {}}
+        onSave={handleSaveNodeContent} // Use the unified handler
       />
       {selectedSequenceNode && (
         <SequenceEditor
           node={selectedSequenceNode}
-          content={nodeContentMap[selectedSequenceNode.id] || {}}
+          // Fetch content directly from the node's data
+          content={nodes.find(n => n.id === selectedSequenceNode.id)?.data?.content || {}}
           onSave={handleSaveSequenceContent}
           onClose={() => setSelectedSequenceNode(null)}
         />
@@ -618,7 +576,8 @@ const nodeTypes = useMemo(() => ({
       {selectedSendMessageNode && (
         <SendMessageAfterEditor
           node={selectedSendMessageNode}
-          content={nodeContentMap[selectedSendMessageNode.id] || {}}
+          // Fetch content directly from the node's data
+          content={nodes.find(n => n.id === selectedSendMessageNode.id)?.data?.content || {}}
           onSave={handleSaveSendMessageContent}
           onClose={() => setSelectedSendMessageNode(null)}
         />
@@ -628,11 +587,9 @@ const nodeTypes = useMemo(() => ({
         <ButtonEditor
           show={true}
           nodeId={selectedNode?.id}
-          content={nodeContentMap[selectedNode.id]}
-          onSave={
-            handleSaveButtonContent
-          }
-
+          // Fetch content directly from the node's data
+          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
+          onSave={handleSaveNodeContent} // Use the unified handler
           onClose={() => {
             setSelectedNode(null);
             setEditorType(null);
@@ -648,10 +605,9 @@ const nodeTypes = useMemo(() => ({
             setEditorType(null);
           }}
           nodeId={selectedNode.id}
-          content={nodeContentMap[selectedNode.id]}
-          onSave={(id, content) => {
-            setNodeContentMap((prev) => ({ ...prev, [id]: content }));
-          }}
+          // Fetch content directly from the node's data
+          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
+          onSave={handleSaveNodeContent} // Use the unified handler
         />
       )}
       {editorType === 'ecommerceNode' && selectedNode && (
@@ -662,10 +618,9 @@ const nodeTypes = useMemo(() => ({
             setEditorType(null);
           }}
           nodeId={selectedNode.id}
-          content={nodeContentMap[selectedNode.id]}
-          onSave={(id, content) => {
-            setNodeContentMap((prev) => ({ ...prev, [id]: content }));
-          }}
+          // Fetch content directly from the node's data
+          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
+          onSave={handleSaveNodeContent} // Use the unified handler
         />
       )}
     </div>

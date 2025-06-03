@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FaCog, FaUser } from 'react-icons/fa';
-import optionsData from './js-data/optionsData.json'
+import optionsData from './js-data/optionsData.json';
 
-const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap }) => {
+// Destructure 'onSave' from props, along with existing 'node' and 'onClose'
+const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeContentMap and setNodeContentMap from here
   if (!node) return null;
 
-  const { type } = node.data;
-
-  // Common state: holds the saved data per node ID
-  // const [nodeContentMap, setNodeContentMap] = useState({});
+  const { type } = node.data; // Access type from node.data directly
 
   // Text node states
   const [messageType, setMessageType] = useState('Custom');
@@ -28,8 +26,7 @@ const DefaultNodeEditor = ({ node, onClose, nodeContentMap, setNodeContentMap })
   const [filePreview, setFilePreview] = useState(null);
 
   // location
-const [locationText, setLocationText] = useState('');
-
+  const [locationText, setLocationText] = useState('');
 
   // WhatsApp Flow
   const [flowType, setFlowType] = useState('');
@@ -42,19 +39,33 @@ const [locationText, setLocationText] = useState('');
   const [delay, setDelay] = useState(0);
 
   // Load existing data when editing again
+  // Now, content will come directly from node.data.content
   useEffect(() => {
     if (!node?.id) return;
 
-    const content = nodeContentMap[node.id];
+    // Access content directly from node.data.content
+    const content = node.data.content;
+    // console.log('DefaultNodeEditor: Loading content for node', node.id, content); // Debugging
+
     if (!content) {
-      setMessageType((prev) => prev || 'Custom');
+      // Reset states if no content is found for the node
+      setMessageType('Custom');
       setText('');
       setImagePreview(null);
       setAudioPreview(null);
+      setVideoPreview(null);
+      setFilePreview(null);
+      setLocationText('');
+      setFlowType('');
+      setField1('');
+      setField2('');
+      setField3('');
+      setField4('');
       setDelay(0);
       return;
     }
 
+    // Populate states based on the loaded content
     if (content.type === 'Text') {
       setMessageType(content.messageType || 'Custom');
       setText(content.text || '');
@@ -72,9 +83,9 @@ const [locationText, setLocationText] = useState('');
       setFilePreview(content.file || null);
       setDelay(content.delay || 0);
     } else if (content.type === 'Location') {
-      setLocationText(content.text || null);
+      setLocationText(content.text || '');
       setDelay(content.delay || 0);
-    } else if (content.type === 'WhatsappFlow') {
+    } else if (content.type === 'WhatsappFlow') { // Make sure this matches your save type
       setFlowType(content.flowType || '');
       setField1(content.field1 || '');
       setField2(content.field2 || '');
@@ -82,147 +93,99 @@ const [locationText, setLocationText] = useState('');
       setField4(content.field4 || '');
       setDelay(content.delay || 0);
     }
-
-
-  }, [node?.id]);
-
+  }, [node]); // Dependency only on 'node'
 
   // Handle inserting variables into text
   const handleInsertVariable = (variable) => {
     setText((prev) => `${prev} {{${variable}}}`);
   };
 
-  const handleDropdownSelect = (type) => {
-    console.log('Dropdown selected:', type);
-    setMessageType(type);
+  const handleDropdownSelect = (selectedOption) => {
+    setText((prev) => `${prev} ${selectedOption}`); // Append selected option to text
+    setMessageType(selectedOption); // Update messageType to the selected variable for display
     setShowDropdown(false);
   };
 
+
   const handleImageUpload = async (file) => {
     if (!file) return;
-
     const isImage = file.type === 'image/png' || file.type === 'image/jpeg';
     if (!isImage) {
       alert('Only PNG and JPG images are supported.');
       return;
     }
-
-    // Upload the file to your backend or cloud storage
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const response = await fetch('http://localhost:3000/api/upload-media', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const response = await fetch('http://localhost:3000/api/upload-media', { method: 'POST', body: formData, });
       const data = await response.json();
-
       if (data.fileUrl) {
         const fullUrl = `http://localhost:3000${data.fileUrl}`;
         console.log("Image uploaded:", fullUrl);
-        setImagePreview(fullUrl);  // Or whatever state you're using
-      } else {
-        console.error("Upload response error", data);
-      }
-
-
-    } catch (error) {
-      console.error('Upload failed', error);
-    }
+        setImagePreview(fullUrl);
+      } else { console.error("Upload response error", data); }
+    } catch (error) { console.error('Upload failed', error); }
   };
 
   const handleAudioUpload = async (file) => {
     if (!file) return;
-
     const isAudio = ['audio/mpeg', 'audio/wav', 'audio/mp3'].includes(file.type);
     if (!isAudio) {
       alert('Only MP3 and WAV audio files are supported.');
       return;
     }
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const response = await fetch('http://localhost:3000/api/upload-media', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const response = await fetch('http://localhost:3000/api/upload-media', { method: 'POST', body: formData, });
       const data = await response.json();
       if (data.fileUrl) {
         const fullUrl = `http://localhost:3000${data.fileUrl}`;
         console.log("Audio uploaded:", fullUrl);
         setAudioPreview(fullUrl);
-      } else {
-        console.error("Upload response error", data);
-      }
-    } catch (error) {
-      console.error('Audio upload failed', error);
-    }
+      } else { console.error("Upload response error", data); }
+    } catch (error) { console.error('Audio upload failed', error); }
   };
-
 
   const handleVideoUpload = async (file) => {
     if (!file) return;
-
     const isVideo = ['video/mp4', 'video/x-flv', 'video/x-ms-wmv'].includes(file.type);
     if (!isVideo) {
       alert('Only MP4, FLV, and WMV video files are supported.');
       return;
     }
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const response = await fetch('http://localhost:3000/api/upload-media', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const response = await fetch('http://localhost:3000/api/upload-media', { method: 'POST', body: formData, });
       const data = await response.json();
       if (data.fileUrl) {
         const fullUrl = `http://localhost:3000${data.fileUrl}`;
         console.log("Video uploaded:", fullUrl);
         setVideoPreview(fullUrl);
-      } else {
-        console.error("Upload response error", data);
-      }
-    } catch (error) {
-      console.error('Video upload failed', error);
-    }
+      } else { console.error("Upload response error", data); }
+    } catch (error) { console.error('Video upload failed', error); }
   };
 
   const handleFileUpload = async (file) => {
     if (!file) return;
-
     const supportedTypes = [
-      'application/msword',                           // .doc
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
-      'application/pdf',                              // .pdf
-      'application/vnd.ms-powerpoint',                // .ppt
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation', // .pptx
-      'application/vnd.ms-excel',                     // .xls
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'         // .xlsx
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/pdf',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     ];
-
     if (!supportedTypes.includes(file.type)) {
       alert('Only DOC, DOCX, PDF, PPT, PPTX, XLS, and XLSX files are supported.');
       return;
     }
-
     const formData = new FormData();
     formData.append('file', file);
-
     try {
-      const response = await fetch('http://localhost:3000/api/upload-media', {
-        method: 'POST',
-        body: formData,
-      });
-
+      const response = await fetch('http://localhost:3000/api/upload-media', { method: 'POST', body: formData, });
       const data = await response.json();
       if (data.fileUrl) {
         const fullUrl = `http://localhost:3000${data.fileUrl}`;
@@ -232,35 +195,18 @@ const [locationText, setLocationText] = useState('');
           url: fullUrl,
           type: file.type,
         });
-      } else {
-        console.error("Upload response error", data);
-      }
-    } catch (error) {
-      console.error('File upload failed', error);
+      } else { console.error("Upload response error", data); }
+    } catch (error) { console.error('File upload failed', error); }
+  };
+
+
+  // This function now calls the 'onSave' prop passed from FlowBuilder
+  const handleSaveAndClose = (contentToSave) => {
+    if (onSave) {
+      onSave(node.id, contentToSave);
+      console.log('Saved data:', contentToSave); // Confirm data in console
     }
-  };
-
-
-  const handleSaveContent = (content) => {
-    if (!node?.id) return;
-
-    const updatedMap = {
-      ...nodeContentMap,
-      [node.id]: content,
-    };
-
-    setNodeContentMap(updatedMap);
-    // updateMap(node.id)
-    console.log('Saved Node Content Map:', updatedMap);
-    onClose();
-  };
-
-  const saveOrUpdateMedia = (mediaType, mediaContent) => {
-    handleSaveContent({
-      type: mediaType,
-      [mediaType.toLowerCase()]: mediaContent,
-      delay
-    });
+    onClose(); // Close the editor after saving
   };
 
   return (
@@ -296,17 +242,17 @@ const [locationText, setLocationText] = useState('');
                   width: '150px',
                   zIndex: 1000
                 }}>
-                  {['#fname#', '#mark#', '#phonenumber#'].map((option) => (
+                  {optionsData.default_node_editor_variable_options.map((option) => ( // Assuming this path
                     <li
-                      key={option}
-                      onClick={() => handleDropdownSelect(option)}
+                      key={option.name}
+                      onClick={() => handleDropdownSelect(option.value)}
                       style={{
                         padding: '8px 12px',
                         cursor: 'pointer',
                         borderBottom: '1px solid #eee'
                       }}
                     >
-                      {option}
+                      {option.name}
                     </li>
                   ))}
                 </ul>
@@ -350,14 +296,11 @@ const [locationText, setLocationText] = useState('');
           <div className='mt-4 d-flex justify-content-end'>
             <button
               className='btn offcanvas-close me-2'
-              onClick={() => {
-
-                onClose();
-              }}
+              onClick={onClose}
             >
               Close
             </button>
-            <button className='btn text-save' onClick={() => handleSaveContent({
+            <button className='btn text-save' onClick={() => handleSaveAndClose({
               type: 'Text',
               messageType,
               text,
@@ -422,17 +365,15 @@ const [locationText, setLocationText] = useState('');
           <div className='mt-4 d-flex justify-content-end'>
             <button
               className='btn offcanvas-close me-2'
-              onClick={() => {
-                onClose();
-              }}
+              onClick={onClose}
             >
               Close
             </button>
-            <button className='btn text-save' onClick={() => saveOrUpdateMedia('Image', imagePreview)}>Save</button>
+            <button className='btn text-save' onClick={() => handleSaveAndClose({ type: 'Image', image: imagePreview, delay })}>Save</button>
           </div>
         </div>
       )}
-      {/* YouTube Node Placeholder */}
+      {/* Video Node Placeholder */}
       {type === 'Video' && (
         <div>
           <p>Configure Video</p>
@@ -488,13 +429,11 @@ const [locationText, setLocationText] = useState('');
           <div className='mt-4 d-flex justify-content-end'>
             <button
               className='btn offcanvas-close me-2'
-              onClick={() => {
-                onClose();
-              }}
+              onClick={onClose}
             >
               Close
             </button>
-            <button className='btn text-save' onClick={() => saveOrUpdateMedia('Video', videoPreview)}>Save</button>
+            <button className='btn text-save' onClick={() => handleSaveAndClose({ type: 'Video', video: videoPreview, delay })}>Save</button>
           </div>
         </div>
       )}
@@ -550,13 +489,11 @@ const [locationText, setLocationText] = useState('');
           <div className='mt-4 d-flex justify-content-end'>
             <button
               className='btn offcanvas-close me-2'
-              onClick={() => {
-                onClose();
-              }}
+              onClick={onClose}
             >
               Close
             </button>
-            <button className='btn text-save' onClick={() => saveOrUpdateMedia('Audio', audioPreview)}>Save</button>
+            <button className='btn text-save' onClick={() => handleSaveAndClose({ type: 'Audio', audio: audioPreview, delay })}>Save</button>
           </div>
         </div>
       )}
@@ -615,14 +552,11 @@ const [locationText, setLocationText] = useState('');
           <div className='mt-4 d-flex justify-content-end'>
             <button
               className='btn offcanvas-close me-2'
-              onClick={() => {
-
-                onClose();
-              }}
+              onClick={onClose}
             >
               Close
             </button>
-            <button className='btn text-save' onClick={() => saveOrUpdateMedia('File', filePreview)}>Save</button>
+            <button className='btn text-save' onClick={() => handleSaveAndClose({ type: 'File', file: filePreview, delay })}>Save</button>
           </div>
         </div>
       )}
@@ -654,16 +588,13 @@ const [locationText, setLocationText] = useState('');
           <div className='mt-4 d-flex justify-content-end'>
             <button
               className='btn offcanvas-close me-2'
-              onClick={() => {
-
-                onClose();
-              }}
+              onClick={onClose}
             >
               Close
             </button>
-            <button className='btn text-save' onClick={() => handleSaveContent({
+            <button className='btn text-save' onClick={() => handleSaveAndClose({
               type: 'Location',
-              text:locationText,
+              text: locationText,
               delay
             })}>Save</button>
           </div>
@@ -742,7 +673,7 @@ const [locationText, setLocationText] = useState('');
           </div>
 
           <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>
-          <input type="range"  min={0}
+          <input type="range" min={0}
             max={30}
             step={1}
             value={delay}
@@ -752,8 +683,8 @@ const [locationText, setLocationText] = useState('');
 
           <div className='mt-4 d-flex justify-content-end'>
             <button className='btn offcanvas-close me-2' onClick={onClose}>Close</button>
-            <button className='btn text-save' onClick={() => handleSaveContent({
-              type: 'WhatsappFlow',
+            <button className='btn text-save' onClick={() => handleSaveAndClose({
+              type: 'Whatsapp', // Changed from 'WhatsappFlow' to 'Whatsapp' for consistency with node.data.type
               flowType,
               field1,
               field2,
@@ -766,7 +697,6 @@ const [locationText, setLocationText] = useState('');
           </div>
         </div>
       )}
-
     </div>
   );
 };
