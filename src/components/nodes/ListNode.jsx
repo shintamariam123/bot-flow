@@ -1,11 +1,11 @@
 // ButtonNode.jsx
-import React, { useState } from 'react';
+import React, { useState,useCallback } from 'react';
 import { Icon } from '@iconify/react';
 
 import { Handle, Position } from '@xyflow/react';
 
-const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
-
+const ListNode = React.memo(({ data, id }) => {
+const { onEditListNode,onRemoveNode} = data
     const [showClose, setShowClose] = useState(false);
     //   const content = nodeContentMap[id];
 
@@ -19,6 +19,18 @@ const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
     const handleClick = () => {
         if (showClose) setShowClose(false);
     };
+     const handleRemoveClick = useCallback((e) => {
+        e.stopPropagation();
+        console.log(`ButtonNode ${id}: Close icon clicked.`);
+        
+        if (onRemoveNode && id) {
+          console.log(`ButtonNode ${id}: Calling onRemoveNode with ID: ${id}`);
+          onRemoveNode(id);
+        } else {
+          console.error(`ButtonNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
+        }
+        setShowClose(false);
+      }, [onRemoveNode, id]);
 
     return (
         <div
@@ -28,13 +40,9 @@ const ListNode = React.memo(({ data, id, onEditListNode,onRemoveNode }) => {
             onClick={handleClick} // hide close on left click
         >
             {showClose && (
-                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} onClick={(e) => {
-                    e.stopPropagation();
-                    if (onRemoveNode && id) {
-                        onRemoveNode(id);
-                        onClose();
-                    } setShowClose(false); // hide close icon after removing
-                }} style={{
+                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} 
+                onClick={handleRemoveClick}
+                style={{
                     position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '8px',
                     color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
                 }}

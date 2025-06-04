@@ -20,6 +20,7 @@ const DefaultNode = memo(({ id, data, onRemoveNode }) => {
   const handleContextMenu = (e) => {
     e.preventDefault();
     setShowClose(true);
+    console.log(`DefaultNode ${id}: Right-clicked to show close icon.`);
   };
 
   const handleClick = () => {
@@ -245,11 +246,16 @@ const DefaultNode = memo(({ id, data, onRemoveNode }) => {
         <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
+             console.log(`DefaultNode ${id}: Close icon clicked.`);
             if (onRemoveNode && id) {
+              console.log(`DefaultNode ${id}: Calling onRemoveNode with ID: ${id}`);
               onRemoveNode(id);
               if (data.onCloseEditor) {
+                 console.log(`DefaultNode ${id}: Calling onCloseEditor.`);
                 data.onCloseEditor();
               }
+            }else{
+              console.log(`DefaultNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
             }
             setShowClose(false);
           }}
@@ -307,7 +313,7 @@ const DefaultNode = memo(({ id, data, onRemoveNode }) => {
         <p className="ms-auto">Compose Next Message</p>
       </div>
       <Handle
-        type="target"
+        type="target"  id="input" 
         position={Position.Bottom}
         style={{
           right: 'auto', left: 0, bottom: 20, width: 10,
