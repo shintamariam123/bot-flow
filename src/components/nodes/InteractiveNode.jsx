@@ -144,7 +144,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
           <p>Reply</p>
         </div>
         {/* Four source handles */}
-        <Handle type="target" position={Position.Bottom} style={{
+        <Handle type="target"    position={Position.Bottom} style={{
           right: 'auto', left: 0, bottom: 20, width: 10,
           height: 10,
           borderRadius: '50%',  // Circle
@@ -156,7 +156,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
           {/* Labels for each source handle */}
           <div style={{ position: 'absolute', right: 10, bottom: 55, fontSize: '6px' }}>
             Next
-            <Handle type="source" position={Position.Right} style={{
+            <Handle type="source" id='reply' position={Position.Right} style={{
               left: 'auto', right: -10, bottom: 5, width: 10,
               height: 10,
               borderRadius: '50%',  // Circle

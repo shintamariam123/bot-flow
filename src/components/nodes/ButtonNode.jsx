@@ -1,28 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState,useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { Handle, Position } from '@xyflow/react';
 
-const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, onSubscribeToSequence }) => {
-
+const ButtonNode = React.memo(({ data, id,  }) => {
+const {onEditButtonNode, onRemoveNode, onSubscribeToSequence} = data
     const content = data.content;
     const [showClose, setShowClose] = useState(false);
 
     // Right-click handler to show the close button
-    const handleContextMenu = (e) => {
-        e.preventDefault(); // prevent default context menu
-        setShowClose(true);
-    };
+    const handleContextMenu = useCallback((e) => {
+    e.preventDefault();
+    setShowClose(true);
+    console.log(`ButtonNode ${id}: Right-clicked to show close icon.`);
+  }, [id]);
 
-    const handleNodeClick = (e) => {
-        if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
-            return;
-        }
-        if (showClose) {
-            setShowClose(false);
-        } else {
-            onEditButtonNode?.(id);
-        }
-    };
+   const handleNodeClick = useCallback((e) => {
+    if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
+      return;
+    }
+    if (showClose) {
+      setShowClose(false);
+    } else {
+      onEditButtonNode?.(id);
+    }
+  }, [showClose, onEditButtonNode, id]);
+
+    // const handleNodeClick = (e) => {
+    //     if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
+    //         return;
+    //     }
+    //     if (showClose) {
+    //         setShowClose(false);
+    //     } else {
+    //         onEditButtonNode?.(id);
+    //     }
+    // };
+
+     const handleRemoveClick = useCallback((e) => {
+    e.stopPropagation();
+    console.log(`ButtonNode ${id}: Close icon clicked.`);
+    
+    if (onRemoveNode && id) {
+      console.log(`ButtonNode ${id}: Calling onRemoveNode with ID: ${id}`);
+      onRemoveNode(id);
+    } else {
+      console.error(`ButtonNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
+    }
+    setShowClose(false);
+  }, [onRemoveNode, id]);
+
+  const handleSubscribeClick = useCallback((e) => {
+    e.stopPropagation();
+    onSubscribeToSequence?.(id);
+  }, [onSubscribeToSequence, id]);
 
     const iconMap = {
         Button: "mdi:button-cursor",
@@ -37,13 +67,10 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, onSub
             onClick={handleNodeClick} // Unified click handler for the node body
         >
             {showClose && (
-                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} onClick={(e) => {
-                    e.stopPropagation(); // Prevent handleNodeClick from firing
-                    if (onRemoveNode && id) {
-                        onRemoveNode(id);
-                    }
-                    setShowClose(false); // hide close icon after removing
-                }} style={{
+                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
+                onClick={handleRemoveClick}
+               
+                style={{
                     position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '6px',
                     color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
                 }}
@@ -140,7 +167,7 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, onSub
                 ) : (
                     // Display "Click to add content" only when content is empty
                     <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{cursor:'pointer'}} />
+                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
                     </div>
                 )}
             </div>
@@ -149,7 +176,7 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, onSub
             <div className="px-2 footer mt-3 d-flex align-self-end">
                 <p>Message</p>
             </div>
-            <Handle type="target" position={Position.Bottom}  id="button-target" style={{
+            <Handle type="target" position={Position.Bottom} id="button-target" style={{
                 right: 'auto', left: 0, bottom: 20, width: 10,
                 height: 10,
                 borderRadius: '50%',    // Circle
@@ -158,18 +185,14 @@ const ButtonNode = React.memo(({ data, id, onEditButtonNode, onRemoveNode, onSub
             }} />
             <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}>
                 Next
-                <Handle id='next' type="source" position={Position.Right} style={{
+                <Handle id='next-step' type="source" position={Position.Right} style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />
             </div>
 
             <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}
-               onClick={(e) => {
-                    e.stopPropagation(); // Stop propagation for this specific click to prevent node click
-                    // Directly call the handler without checking content.actionType or content.formData
-                    onSubscribeToSequence?.(id);
-                }}>
+                onClick={handleSubscribeClick}>
                 Subscribe to sequence
                 <Handle id='subscribe' type="source" position={Position.Right} style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
