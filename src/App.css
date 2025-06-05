@@ -99,7 +99,7 @@
  box-shadow: 0  0 8px 3px rgb(165, 165, 199);
      border-radius: 10px !important;
      background-color: #fff;
-     width: 150px;
+     min-width: 150px;
      min-height: 140px;
      border: 1px solid rgb(234, 228, 228);
 

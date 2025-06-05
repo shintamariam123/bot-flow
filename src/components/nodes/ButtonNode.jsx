@@ -1,58 +1,44 @@
-import React, { useState,useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { Handle, Position } from '@xyflow/react';
 
-const ButtonNode = React.memo(({ data, id,  }) => {
-const {onEditButtonNode, onRemoveNode, onSubscribeToSequence} = data
+const ButtonNode = React.memo(({ data, id, }) => {
+    const { onEditButtonNode, onRemoveNode, onSubscribeToSequence } = data
     const content = data.content;
     const [showClose, setShowClose] = useState(false);
 
     // Right-click handler to show the close button
     const handleContextMenu = useCallback((e) => {
-    e.preventDefault();
-    setShowClose(true);
-    console.log(`ButtonNode ${id}: Right-clicked to show close icon.`);
-  }, [id]);
+        e.preventDefault();
+        setShowClose(true);
+        console.log(`ButtonNode ${id}: Right-clicked to show close icon.`);
+    }, [id]);
 
-   const handleNodeClick = useCallback((e) => {
-    if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
-      return;
-    }
-    if (showClose) {
-      setShowClose(false);
-    } else {
-      onEditButtonNode?.(id);
-    }
-  }, [showClose, onEditButtonNode, id]);
+    const handleNodeClick = useCallback((e) => {
+        if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
+            return;
+        }
+        if (showClose) {
+            setShowClose(false);
+        } else {
+            onEditButtonNode?.(id);
+        }
+    }, [showClose, onEditButtonNode, id]);
 
-    // const handleNodeClick = (e) => {
-    //     if (e.target.closest('.react-flow__handle') || e.target.closest('.close-box')) {
-    //         return;
-    //     }
-    //     if (showClose) {
-    //         setShowClose(false);
-    //     } else {
-    //         onEditButtonNode?.(id);
-    //     }
-    // };
 
-     const handleRemoveClick = useCallback((e) => {
-    e.stopPropagation();
-    console.log(`ButtonNode ${id}: Close icon clicked.`);
-    
-    if (onRemoveNode && id) {
-      console.log(`ButtonNode ${id}: Calling onRemoveNode with ID: ${id}`);
-      onRemoveNode(id);
-    } else {
-      console.error(`ButtonNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
-    }
-    setShowClose(false);
-  }, [onRemoveNode, id]);
+    const handleRemoveClick = useCallback((e) => {
+        e.stopPropagation();
 
-  const handleSubscribeClick = useCallback((e) => {
-    e.stopPropagation();
-    onSubscribeToSequence?.(id);
-  }, [onSubscribeToSequence, id]);
+        if (onRemoveNode && id) {
+            onRemoveNode(id);
+        }
+        setShowClose(false);
+    }, [onRemoveNode, id]);
+
+    const handleSubscribeClick = useCallback((e) => {
+        e.stopPropagation();
+        onSubscribeToSequence?.(id);
+    }, [onSubscribeToSequence, id]);
 
     const iconMap = {
         Button: "mdi:button-cursor",
@@ -68,12 +54,12 @@ const {onEditButtonNode, onRemoveNode, onSubscribeToSequence} = data
         >
             {showClose && (
                 <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
-                onClick={handleRemoveClick}
-               
-                style={{
-                    position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '6px',
-                    color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
-                }}
+                    onClick={handleRemoveClick}
+
+                    style={{
+                        position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '6px',
+                        color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
+                    }}
                     title="Remove node"
                 >
                     <Icon icon="ic:baseline-close" width="10" height="10" />

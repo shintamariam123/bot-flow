@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState,useRef, useEffect, useMemo } from 'react';
 
 import {
   ReactFlow,
@@ -30,6 +30,10 @@ import SequenceNode from './SequenceNode';
 import SequenceEditor from '../editors/SequenceEditor';
 import SendMessageAfterNode from './SendMessageAfterNode';
 import SendMessageAfterEditor from '../editors/SendMessageAfterEditor';
+import SectionNode from './SectionNode';
+import SectionEditor from '../editors/SectionEditor';
+import RowSection from './RowSection';
+import RowSectionEditor from '../editors/RowSectionEditor';
 
 let id = 1;
 const getId = () => `node_${id++}`;
@@ -60,8 +64,16 @@ function FlowBuilder() {
   const [selectedSequenceNode, setSelectedSequenceNode] = useState(null);
   const [selectedSendMessageNode, setSelectedSendMessageNode] = useState(null);
 
-  
+  const [selectedSectionNode, setSelectedSectionNode] = useState(null);
+  const [selectedRowSectionNode, setSelectedRowSectionNode] = useState(null);
 
+
+    const nodesRef = useRef(nodes); // Create a ref to hold the latest nodes state
+
+    // Update the ref whenever 'nodes' state changes
+    useEffect(() => {
+        nodesRef.current = nodes;
+    }, [nodes]);
   const onNodeClick = useCallback((_event, node) => {
 
     switch (node.type) {
@@ -93,6 +105,12 @@ function FlowBuilder() {
         break;
       case 'sendMessageAfterNode':
         setSelectedSendMessageNode(node);
+        break;
+      case 'sectionNode':
+        setSelectedSectionNode(node);
+        break;
+      case 'rowSectionNode':
+        setSelectedRowSectionNode(node);
         break;
       default:
         break;
@@ -144,6 +162,8 @@ function FlowBuilder() {
     );
   }, [setNodes, setNodeContentMap]);
 
+
+
   const navigate = useNavigate();
 
   const onRemoveNode = useCallback((nodeId) => {
@@ -174,7 +194,14 @@ function FlowBuilder() {
     if (selectedSendMessageNode && selectedSendMessageNode.id === nodeId) {
       setSelectedSendMessageNode(null);
     }
-  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode]);
+    if (selectedSectionNode && selectedSectionNode.id === nodeId) {
+      setSelectedSectionNode(null);
+    }
+    if (selectedRowSectionNode && selectedRowSectionNode.id === nodeId) {
+      setSelectedRowSectionNode(null);
+    }
+  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode]);
+
 
 
   const handleSubscribeToSequence = useCallback((buttonNodeId) => {
@@ -238,8 +265,74 @@ function FlowBuilder() {
     setEdges((eds) => [...eds, ...newEdges]);
   }, [nodes, setNodes, setEdges]); // Removed nodeContentMap from dependencies here
 
+ const handleSubscribeToSection = useCallback((listNodeId) => {
+    const listNode = nodes.find(node => node.id === listNodeId);
+    if (!listNode) { console.error('list node not found:', listNodeId); return; }
+    const newNodes = [];
+    const newEdges = [];
+    const sectionNodeId = getId(); // This generates 'node_9'
+    const sectionNodePosition = {
+        x: listNode.position.x + 300,
+        y: listNode.position.y + 50,
+    };
+    const sectionNode = {
+        id: sectionNodeId,
+        type: 'sectionNode',
+        position: sectionNodePosition,
+        data: {
+            label: `New section from list`,
+            content: {},
+        },
+    };
+    newNodes.push(sectionNode);
+
+    newEdges.push({
+        id: `e-<span class="math-inline">\{listNodeId\}\-</span>{sectionNodeId}-list-subscribe`,
+        source: listNodeId,
+        sourceHandle: 'section',
+        target: sectionNodeId,
+        targetHandle: 'section-target',
+        type: 'smoothstep',
+    });
+
+    for (let i = 0; i < 3; i++) {
+        const rowNodeId = getId();
+        const rowNodePosition = {
+            x: sectionNodePosition.x + 300,
+            y: sectionNodePosition.y + (i * 180) - 50,
+        };
+        const rowSectionNode = {
+            id: rowNodeId,
+            type: 'rowSectionNode',
+            position: rowNodePosition,
+            data: {
+                label: `Row ${i + 1}`,
+                content: {},
+            },
+        };
+        newNodes.push(rowSectionNode);
+        newEdges.push({
+            id: `e-<span class="math-inline">\{sectionNodeId\}\-row\-msg\-</span>{rowNodeId}-row-target-${i}`,
+            source: sectionNodeId,
+            sourceHandle: 'row-msg',
+            target: rowNodeId,
+            targetHandle: 'row-target',
+            type: 'smoothstep',
+        });
+    }
+
+    console.log('handleSubscribeToSection: New nodes to add:', newNodes); // ADD THIS
+    setNodes((nds) => {
+        const updatedNodes = [...nds, ...newNodes];
+        console.log('handleSubscribeToSection: Nodes after setNodes:', updatedNodes); // ADD THIS
+        return updatedNodes;
+    });
+    setEdges((eds) => [...eds, ...newEdges]);
+}, [nodes, setNodes, setEdges]); // Ensure `nodes` is a dependency here.
   // FlowBuilder.js (Excerpt from spawnConnectedNode)
+
   const spawnConnectedNode = useCallback((sourceNodeId, sourceHandle, type) => {
+
     const newNodeId = getId();
     const nodeTypeMap = {
       button: 'buttonNode',
@@ -254,7 +347,7 @@ function FlowBuilder() {
       ecommerce: 'ecommerce-target', // Matches the id in EcommerceNode.js
       reply: 'input',
     };
-    
+
     const sourceNode = nodes.find(node => node.id === sourceNodeId);
     let newPosition = { x: 0, y: 0 };
     if (sourceNode) {
@@ -285,6 +378,7 @@ function FlowBuilder() {
         onEditEcommerceNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('ecommerceNode'); },
         onEditButtonNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('buttonNode'); },
         onSubscribeToSequence: handleSubscribeToSequence, // Ensure this is passed to ButtonNode if needed
+        onSubscribeToSection: handleSubscribeToSection
       },
     };
 
@@ -299,7 +393,7 @@ function FlowBuilder() {
 
     setNodes((nds) => [...nds, newNode]);
     setEdges((eds) => [...eds, newEdge]);
-  }, [setNodes, setEdges, nodes, onRemoveNode, handleSubscribeToSequence]); // Keep dependencies up to date
+  }, [setNodes, setEdges, nodes, onRemoveNode, handleSubscribeToSequence, handleSubscribeToSection]); // Keep dependencies up to date
 
 
   const handleSaveSequenceContent = useCallback((content) => {
@@ -313,6 +407,49 @@ function FlowBuilder() {
     handleSaveNodeContent(selectedSendMessageNode.id, content); // Use unified handler
     setSelectedSendMessageNode(null);
   }, [selectedSendMessageNode, handleSaveNodeContent]);
+
+  // const handleSaveSectionContent = useCallback((content) => {
+  //   if (!selectedSectionNode) return;
+  //   handleSaveNodeContent(selectedSectionNode.id, content); // Use unified handler
+  //   setSelectedSectionNode(null);
+  // }, [selectedSectionNode, handleSaveNodeContent]);
+
+    // This function will be passed as `onSave` to SectionEditor
+const handleSaveSectionContent = useCallback((nodeId, newContent) => {
+    setNodes((nds) =>
+        nds.map((node) => {
+            if (node.id === nodeId) {
+                // Return a new node object with updated data.content
+                return {
+                    ...node,
+                    data: {
+                        ...node.data,
+                        content: newContent, // <--- UPDATE THE CONTENT HERE
+                    },
+                };
+            }
+            return node;
+        })
+    );
+}, [setNodes]); 
+
+ const handleSaveRowContent = useCallback((nodeId, content) => {
+    // This is crucial: Use nodeId to find and update the correct node
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+            ...node,
+            data: {
+              ...node.data,
+              content: content,
+            },
+          }
+          : node
+      )
+    );
+    setSelectedRowSectionNode(null); // Close the editor after saving
+  }, [setNodes]);
 
 
   useEffect(() => {
@@ -390,7 +527,8 @@ function FlowBuilder() {
         }
         setNodes((nds) => nds.concat(newNodes));
         setEdges((eds) => eds.concat(newEdges));
-      } else {
+      }
+      else {
         const newNode = {
           id: newNodeId,
           type: nodeType,
@@ -411,8 +549,9 @@ function FlowBuilder() {
         setNodes((nds) => nds.concat(newNode));
       }
     },
-    [setNodes, setEdges, screenToFlowPosition, onRemoveNode] // Removed nodeContentMap from dependencies here
+    [setNodes, setEdges, screenToFlowPosition, onRemoveNode]
   );
+
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -422,7 +561,6 @@ function FlowBuilder() {
   const openStartBotEditor = () => setShowStartEditor(true);
   const closeStartBotEditor = () => setShowStartEditor(false);
   const closeDefaultNodeEditor = () => setSelectedDefaultNode(null);
-
   const updatedNodes = nodes.map((node) =>
     node.type === 'startBot'
       ? { ...node, data: { ...node.data, savedData: savedStartBotData, openEditor: openStartBotEditor } }
@@ -437,7 +575,9 @@ function FlowBuilder() {
         {...nodeProps}
         onRemoveNode={onRemoveNode} // Explicitly pass here
       />
-    ), interactiveNode: InteractiveNode,
+    ),
+
+    interactiveNode: InteractiveNode,
     buttonNode: ButtonNode,
     listNode: ListNode,
     ecommerceNode: EcommerceNode,
@@ -459,6 +599,25 @@ function FlowBuilder() {
         onRemoveNode={onRemoveNode}
         onEditSendMessageNode={(nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId))}
         targetHandleId="send-after" />
+    ),
+    sectionNode: (nodeProps) => (
+      <SectionNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditSectionNode={(nodeId) => {
+          console.log('FlowBuilder: received nodeId for editor:', nodeId); // ADD THIS
+          const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+          console.log('Attempting to open editor for node:', nodeToEdit);
+          setSelectedSectionNode(nodeToEdit);
+        }}
+        targetHandleId="section-target" />
+    ),
+    rowSectionNode: (nodeProps) => (
+      <RowSection
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditRowSectionNode={(nodeId) => setSelectedRowSectionNode(nodes.find(n => n.id === nodeId))}
+        targetHandleId="row-target" />
     ),
   }), []);
 
@@ -498,7 +657,7 @@ function FlowBuilder() {
               onEditButtonNode: (id) => {
                 const nodeToEdit = nds.find(n => n.id === id);
                 setSelectedNode(nodeToEdit);
-                 setEditorType('buttonNode');
+                setEditorType('buttonNode');
               },
               onSubscribeToSequence: handleSubscribeToSequence,
             },
@@ -513,6 +672,7 @@ function FlowBuilder() {
                 setSelectedNode(nodes.find(n => n.id === id));
                 setEditorType('listNode');
               },
+              onSubscribeToSection: handleSubscribeToSection
             },
           };
         } else if (node.type === 'ecommerceNode') {
@@ -548,10 +708,33 @@ function FlowBuilder() {
               onEditSendMessageNode: (nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId)),
             },
           };
+        } else if (node.type === 'sectionNode') { // **Updated useEffect for SectionNode**
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onRemoveNode: onRemoveNode,
+              onEditSectionNode: (nodeId) => {
+                console.log('FlowBuilder useEffect: received nodeId for editor:', nodeId); // ADD THIS
+                const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+                console.log('FlowBuilder useEffect: Attempting to open editor for node:', nodeToEdit);
+                setSelectedSectionNode(nodeToEdit);
+              },
+            },
+          };
+        } else if (node.type === 'rowSectionNode') { // **Updated useEffect for RowSectionNode**
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onRemoveNode: onRemoveNode,
+              onEditRowSectionNode: (nodeId) => setSelectedRowSectionNode(nodes.find(n => n.id === nodeId)),
+            },
+          };
         }
         return node;
       }));
-  }, [setNodes, onRemoveNode, spawnConnectedNode, handleSubscribeToSequence]);
+  }, [setNodes, onRemoveNode, spawnConnectedNode, handleSubscribeToSequence, handleSubscribeToSection]);
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
@@ -627,6 +810,25 @@ function FlowBuilder() {
           onClose={() => setSelectedSendMessageNode(null)}
         />
       )}
+      {selectedSectionNode && (
+         <SectionEditor
+        show={true} // It's true because selectedSectionNode is not null
+        nodeId={selectedSectionNode.id}
+        // Pass the current content from the selected node's data
+        content={selectedSectionNode.data?.content || {}}
+        onSave={handleSaveSectionContent} // <--- Pass your new save handler
+        onClose={() => setSelectedSectionNode(null)}
+    />
+      )}
+      {selectedRowSectionNode && (
+        <RowSectionEditor
+       show={true} // Set show to true when selectedRowSectionNode is present
+    nodeId={selectedRowSectionNode.id} // Pass the ID of the selected node
+    content={selectedRowSectionNode.data?.content || {}} // Access content from the selected node's data
+    onSave={handleSaveRowContent}
+    onClose={() => setSelectedRowSectionNode(null)}
+        />
+      )}
       {editorType === 'buttonNode' && selectedNode && (
         <ButtonEditor
           show={true}
@@ -638,8 +840,19 @@ function FlowBuilder() {
             setEditorType(null);
           }} />
       )}
-
       {editorType === 'listNode' && selectedNode && (
+        <ListEditor
+          show={true}
+          nodeId={selectedNode?.id}
+          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
+          onSave={handleSaveNodeContent} // Use the unified handler
+          onClose={() => {
+            setSelectedNode(null);
+            setEditorType(null);
+          }} />
+      )}
+
+      {/* {editorType === 'listNode' && selectedNode && (
         <ListEditor
           show={editorType === 'listNode'}
           onClose={() => {
@@ -650,7 +863,7 @@ function FlowBuilder() {
           content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
           onSave={handleSaveNodeContent} // Use the unified handler
         />
-      )}
+      )} */}
       {editorType === 'ecommerceNode' && selectedNode && (
         <EcommerceEditor
           show={editorType === 'ecommerceNode'}
