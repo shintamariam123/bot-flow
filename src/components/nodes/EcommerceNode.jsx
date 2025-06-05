@@ -55,8 +55,8 @@ const { onEditEcommerceNode,onRemoveNode}= data
             <div className="p-2 d-flex flex-column align-items-center w-100">
                 {/* Your existing content */}
                 <div className="d-flex align-self-start align-items-center gap-1 mb-3">
-                    <Icon icon={[data.type || data.label]} width="10" height="10" />
-                    <p className="default-heading mb-0">{data.type}</p>
+                    <Icon icon="tdesign:catalog" width="10" height="10" />
+                    <p className="default-heading mb-0">Catalog</p>
                 </div>
 
                 <div className="d-flex bot_flow" style={{ marginBottom: '0px' }}>
@@ -130,7 +130,7 @@ const { onEditEcommerceNode,onRemoveNode}= data
             />
             <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
             >
-                Next
+                Single
                 <Handle type="source" position={Position.Right} id="list" style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
@@ -138,7 +138,7 @@ const { onEditEcommerceNode,onRemoveNode}= data
             </div>
 
             <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
-                Subscribe to sequence
+                Multiple
                 <Handle type="source" position={Position.Right} id="ecommerce-source"  style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'

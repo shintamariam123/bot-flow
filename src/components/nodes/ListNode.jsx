@@ -1,13 +1,12 @@
-// ButtonNode.jsx
-import React, { useState,useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 
 import { Handle, Position } from '@xyflow/react';
 
 const ListNode = React.memo(({ data, id }) => {
-const { onEditListNode,onRemoveNode} = data
+    const { onEditListNode, onRemoveNode, onSubscribeToSection } = data
     const [showClose, setShowClose] = useState(false);
-    //   const content = nodeContentMap[id];
+    const content = data.content;
 
     // Right-click handler
     const handleContextMenu = (e) => {
@@ -19,33 +18,35 @@ const { onEditListNode,onRemoveNode} = data
     const handleClick = () => {
         if (showClose) setShowClose(false);
     };
-     const handleRemoveClick = useCallback((e) => {
+    const handleRemoveClick = useCallback((e) => {
         e.stopPropagation();
-        console.log(`ButtonNode ${id}: Close icon clicked.`);
-        
+
         if (onRemoveNode && id) {
-          console.log(`ButtonNode ${id}: Calling onRemoveNode with ID: ${id}`);
-          onRemoveNode(id);
-        } else {
-          console.error(`ButtonNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
-        }
+            onRemoveNode(id);
+        } 
         setShowClose(false);
-      }, [onRemoveNode, id]);
+    }, [onRemoveNode, id]);
+
+        const handleSectionClick = useCallback((e) => {
+             e.stopPropagation();
+              console.log('Triggering handleSubscribeToSection for list node:', id);
+             onSubscribeToSection?.(id);
+         }, [onSubscribeToSection, id]);
+     
 
     return (
         <div
             className={`content ${showClose ? 'node-highlighted' : ''}`}
             style={{ width: '100%', position: 'relative' }}
             onContextMenu={handleContextMenu} // show close on right click
-            onClick={handleClick} // hide close on left click
-        >
+            onClick={handleClick} >
             {showClose && (
-                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} 
-                onClick={handleRemoveClick}
-                style={{
-                    position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '8px',
-                    color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
-                }}
+                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
+                    onClick={handleRemoveClick}
+                    style={{
+                        position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '8px',
+                        color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
+                    }}
                     title="Remove node"
                 >
                     <Icon icon="ic:baseline-close" width="15" height="15" />
@@ -53,10 +54,9 @@ const { onEditListNode,onRemoveNode} = data
             )}
 
             <div className="p-2 d-flex flex-column align-items-center w-100">
-                {/* Your existing content */}
                 <div className="d-flex align-self-start align-items-center gap-1 mb-3">
-                    <Icon icon={[data.type || data.label]} width="10" height="10" />
-                    <p className="default-heading mb-0">{data.type}</p>
+                    <Icon icon='majesticons:chat-text' width="10" height="10" />
+                    <p className="default-heading mb-0">Quick Reply</p>
                 </div>
 
                 <div className="d-flex bot_flow" style={{ marginBottom: '0px' }}>
@@ -86,31 +86,18 @@ const { onEditListNode,onRemoveNode} = data
                     </p>
                 </div>
 
-
-                <div>
-
+                {content.label ? (
                     <div className='p-1 d-flex flex-column align-items-center w-100'>
                         <div className='delay-box pt-1 w-fit-content'>
-                            <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay:  sec </p>
+                            <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>{content.label} </p>
                         </div>
 
                     </div>
-
-
-
-                </div>
-
-                <div>
-
-                    <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                            if (onEditListNode && id) {
-                                onEditListNode(id);  // Trigger the editor
-                            }
-                        }}
-                    />
-                </div>
-
+                ) : (
+                    <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
+                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                    </div>
+                )}
             </div>
 
             <div className="dotted-line mt-2" />
@@ -130,21 +117,14 @@ const { onEditListNode,onRemoveNode} = data
             />
             <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
             >
-                Next
-                <Handle type="source" position={Position.Right} id="list" style={{
+                Sections
+                <Handle onClick={handleSectionClick}  type="source" position={Position.Right} id="section" style={{
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />
             </div>
 
-            <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}
-            >
-                Subscribe to sequence
-                <Handle type="source" position={Position.Right} id="list-source" style={{
-                    left: 'auto', right: -10, bottom: 5, width: 10,
-                    height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-                }} />
-            </div>
+
 
         </div>
     );
