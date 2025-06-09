@@ -90,8 +90,8 @@ const SectionNode = React.memo(({ data, id, onRemoveNode, onEditSectionNode }) =
                 {displayedContent.label ?
                     (
                         <div className='p-1 d-flex flex-column align-items-center w-100'>
-                            <div className='delay-box pt-1 w-fit-content'>
-                                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>{displayedContent.label} </p>
+                            <div className='reply-box pt-1 w-fit-content'>
+                                <p style={{ fontSize: '8px', margin: 0 }}>{displayedContent.label} </p>
                             </div>
 
                         </div>
@@ -105,13 +105,12 @@ const SectionNode = React.memo(({ data, id, onRemoveNode, onEditSectionNode }) =
 
             </div>
 
-            <div className="dotted-line mt-3 " />
+            <div className="dotted-line mt-3 mb-5 " />
 
-            <div className="px-2 footer mt-2 d-flex align-self-end">
+            {/* <div className="px-2 footer mt-2 d-flex align-self-end">
                 <p style={{ fontSize: '6px' }}>Reply</p>
             </div>
 
-            {/* Target Handle: Setup New Sequence */}
             <Handle
                 type="target"
                 position={Position.Bottom}
@@ -119,15 +118,27 @@ const SectionNode = React.memo(({ data, id, onRemoveNode, onEditSectionNode }) =
                 style={{
                     right: 'auto', left: 0, bottom: 20, width: 10,
                     height: 10,
-                    borderRadius: '50%',  // Circle
+                    borderRadius: '50%', 
                     background: 'white',
                     border: '1px solid grey'
                 }}
-            />
+            /> */}
 
             {/* Source Handle: Schedule Sequence Message */}
-            <div className='container'>
-                <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
+            <div className='container mt-4'>
+                <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+                    Reply
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                       id="section-target"
+                        style={{
+                            left: 0, bottom: 0, width: 10,
+                            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                        }}
+                    />
+                </div>
+                <div style={{ position: 'absolute', right: 10, bottom: 20, fontSize: '6px', cursor: 'pointer' }}>
                     Rows
                     <Handle
                         type="source"

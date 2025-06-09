@@ -42,8 +42,9 @@ const StartBotNode = React.memo(({ data }) => {
                     </div>
                 ) :
                     (
-                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' onClick={handleThumbClick} style={{ cursor: 'pointer' }} />
-
+                        <div>
+                            <Icon icon="mdi:thumb-up" width="20" height="20" color='black' onClick={handleThumbClick} style={{ cursor: 'pointer' }} />
+                        </div>
                     )}
             </div>
             <div className="dotted-line mt-1" />
@@ -51,12 +52,14 @@ const StartBotNode = React.memo(({ data }) => {
                 {/* <p>Message</p> */}
                 <p className='ms-auto'>Compose Next Message</p>
             </div>
-            <Handle type="source" position={Position.Bottom} style={{ left: 'auto', right: -10, bottom: 20,
-            width: 10,
-    height: 10,
-    borderRadius: '50%',  // Circle
-    background: 'white',
-    border: '1px solid grey' }} />
+            <Handle type="source" position={Position.Bottom} style={{
+                left: 'auto', right: -10, bottom: 20,
+                width: 10,
+                height: 10,
+                borderRadius: '50%',  // Circle
+                background: 'white',
+                border: '1px solid grey'
+            }} />
         </div>
     );
 });

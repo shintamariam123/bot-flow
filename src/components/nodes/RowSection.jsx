@@ -88,11 +88,11 @@ const RowSection = React.memo(({ data, id, onRemoveNode, onEditRowSectionNode })
         {displayedContent.label ?
           (
             <div className='p-1 d-flex flex-column align-items-center w-100'>
-              <div className='delay-box pt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>{displayedContent.label} </p>
+              <div className='reply-box pt-1 w-fit-content'>
+                <p style={{ fontSize: '8px', margin: 0 }}>{displayedContent.label} </p>
               </div>
-              <div className='delay-box pt-1 w-fit-content'>
-                <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>{displayedContent.description} </p>
+              <div className='reply-box pt-1 w-fit-content mt-1'>
+                <p style={{ fontSize: '8px', margin: 0 }}>{displayedContent.description} </p>
               </div>
 
             </div>
@@ -106,13 +106,12 @@ const RowSection = React.memo(({ data, id, onRemoveNode, onEditRowSectionNode })
 
       </div>
 
-      <div className="dotted-line mt-3 " />
+      <div className="dotted-line mt-3 mb-4" />
 
-      <div className="px-2 footer mt-2 d-flex align-self-end">
+      {/* <div className="px-2 footer mt-2 d-flex align-self-end">
         <p style={{ fontSize: '6px' }}>Reply</p>
       </div>
 
-      {/* Target Handle: Send Message After */}
       <Handle
         type="target"
         position={Position.Bottom}
@@ -120,25 +119,39 @@ const RowSection = React.memo(({ data, id, onRemoveNode, onEditRowSectionNode })
         style={{
           right: 'auto', left: 0, bottom: 15, width: 10,
           height: 10,
-          borderRadius: '50%',  // Circle
+          borderRadius: '50%',  
           background: 'white',
           border: '1px solid grey'
         }}
-      />
+      /> */}
+      <div className='container mt-5'>
+        <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+          Reply
+          <Handle
+            type="target"
+            position={Position.Left}
+             id="row-target"
+            style={{
+              left: 0, bottom: 0, width: 10,
+              height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+            }}
+          />
+        </div>
+        <div style={{ position: 'absolute', right: 10, bottom: 20, fontSize: '6px', cursor: 'pointer' }}>
+          Next
+          <Handle
+            type="source"
+            position={Position.Right}
 
-      {/* Source Handle: Schedule Msg */}
-      <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
-        Next
-        <Handle
-          type="source"
-          position={Position.Right}
-
-          style={{
-            left: 'auto', right: -10, bottom: 5, width: 10,
-            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-          }}
-        />
+            style={{
+              left: 'auto', right: -10, bottom: 5, width: 10,
+              height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+            }}
+          />
+        </div>
       </div>
+      {/* Source Handle: Schedule Msg */}
+
     </div >
   );
 });

@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Offcanvas, Form, Button } from 'react-bootstrap';
 
-function RowSectionEditor({show, onClose, nodeId, content, onSave}) {
-     const [label, setLabel] = useState(content?.label || '');
-            const [description, setDescription] = useState(content?.description || '');
+function RowSectionEditor({ show, onClose, nodeId, content, onSave }) {
+  const [label, setLabel] = useState(content?.label || '');
+  const [description, setDescription] = useState(content?.description || '');
 
-         useEffect(() => {
-           setLabel(content?.label || '');
-           setDescription(content?.description || '')
-         }, [content]);
-       
-        
-          const handleSave = () => {
-            event.preventDefault();
-               const contentToSave = {
-                   label,description
-               };
-               onSave(nodeId, contentToSave);
-               console.log('rowSave',contentToSave);
-               
-               onClose();
-           };
-  
+  useEffect(() => {
+    setLabel(content?.label || '');
+    setDescription(content?.description || '')
+  }, [content]);
+
+
+  const handleSave = () => {
+    event.preventDefault();
+    const contentToSave = {
+      label, description
+    };
+    onSave(nodeId, contentToSave);
+    console.log('rowSave', contentToSave);
+
+    onClose();
+  };
+
   return (
-  <Offcanvas show={show} onHide={onClose} placement="end">
+    <Offcanvas show={show} onHide={onClose} placement="end">
       <Offcanvas.Header closeButton>
         {/* <Offcanvas.Title>Edit List Node</Offcanvas.Title> */}
       </Offcanvas.Header>
@@ -37,16 +37,16 @@ function RowSectionEditor({show, onClose, nodeId, content, onSave}) {
               value={label}
               onChange={(e) => setLabel(e.target.value)}
             />
-              <Form.Label className='mt-3'>Description</Form.Label>
-            <Form.Control type='textarea' value={description} 
-            onChange={(e)=> setDescription(e.target.value)}></Form.Control>
+            <Form.Label className='mt-3'>Description</Form.Label>
+            <Form.Control type='textarea' value={description}
+              onChange={(e) => setDescription(e.target.value)}></Form.Control>
           </Form.Group>
           <button type='button' onClick={handleSave} className="mt-3 btn offcanvas-save">
             Save
           </button>
         </Form>
       </Offcanvas.Body>
-    </Offcanvas>  )
+    </Offcanvas>)
 }
 
 export default RowSectionEditor

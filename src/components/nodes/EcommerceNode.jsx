@@ -1,36 +1,47 @@
 // ButtonNode.jsx
-import React, { useState,useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 
 import { Handle, Position } from '@xyflow/react';
 
 const EcommerceNode = React.memo(({ data, id }) => {
-const { onEditEcommerceNode,onRemoveNode}= data
+    const { onEditEcommerceNode, onRemoveNode, onSubscribeToProductSection, onSubscribeToSingleProduct } = data
     const [showClose, setShowClose] = useState(false);
-    //   const content = nodeContentMap[id];
+    const content = data.content;
 
     // Right-click handler
     const handleContextMenu = (e) => {
         e.preventDefault();  // prevent default context menu
         setShowClose(true);
     };
-     const handleRemoveClick = useCallback((e) => {
+    const handleRemoveClick = useCallback((e) => {
         e.stopPropagation();
         console.log(`ButtonNode ${id}: Close icon clicked.`);
-        
+
         if (onRemoveNode && id) {
-          console.log(`ButtonNode ${id}: Calling onRemoveNode with ID: ${id}`);
-          onRemoveNode(id);
+            console.log(`ButtonNode ${id}: Calling onRemoveNode with ID: ${id}`);
+            onRemoveNode(id);
         } else {
-          console.error(`ButtonNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
+            console.error(`ButtonNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
         }
         setShowClose(false);
-      }, [onRemoveNode, id]);
+    }, [onRemoveNode, id]);
 
     // Click outside the close icon or on the node (left click) hides the close icon
     const handleClick = () => {
         if (showClose) setShowClose(false);
     };
+    const handleProductSectionClick = useCallback((e) => {
+        e.stopPropagation();
+        console.log('Triggering handleSubscribeToProductSection for list node:', id);
+        onSubscribeToProductSection?.(id);
+    }, [onSubscribeToProductSection, id]);
+
+    const handleSingleProductClick = useCallback((e) => {
+        e.stopPropagation();
+        console.log('Triggering handleSubscribeToSingleProduct for list node:', id);
+        onSubscribeToSingleProduct?.(id);
+    }, [onSubscribeToSingleProduct, id]);
 
     return (
         <div
@@ -40,12 +51,12 @@ const { onEditEcommerceNode,onRemoveNode}= data
             onClick={handleClick} // hide close on left click
         >
             {showClose && (
-                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`} 
-                onClick={handleRemoveClick}
-                style={{
-                    position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '8px',
-                    color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
-                }}
+                <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
+                    onClick={handleRemoveClick}
+                    style={{
+                        position: 'absolute', top: -8, right: -6, cursor: 'pointer', fontSize: '8px',
+                        color: 'black', zIndex: 10, userSelect: 'none', border: '1px solid black', borderRadius: '50%'
+                    }}
                     title="Remove node"
                 >
                     <Icon icon="ic:baseline-close" width="15" height="15" />
@@ -85,67 +96,73 @@ const { onEditEcommerceNode,onRemoveNode}= data
                         0
                     </p>
                 </div>
-
-
-                <div>
-
+                {content.label ? (
                     <div className='p-1 d-flex flex-column align-items-center w-100'>
-                        <div className='delay-box pt-1 w-fit-content'>
-                            <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>Delay:  sec </p>
+                        <div className='reply-box pt-1 w-fit-content'>
+                            <p style={{ fontSize: '8px', margin: 0 }}>{content.label}</p>
                         </div>
 
                     </div>
-
-
-
-                </div>
-
-                <div>
-
-                    <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
-                        onClick={() => {
-                            if (onEditEcommerceNode && id) {
-                                onEditEcommerceNode(id);  // Trigger the editor
-                            }
-                        }}
-                    />
-                </div>
-
+                ) : (
+                    <div>
+                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                                if (onEditEcommerceNode && id) {
+                                    onEditEcommerceNode(id);  // Trigger the editor
+                                }
+                            }} />
+                    </div>
+                )
+                }
             </div>
 
             <div className="dotted-line mt-2" />
-            <div className="px-2 footer mt-3 d-flex align-self-end">
+            {/* <div className="px-2 footer mt-3 d-flex align-self-end">
                 <p>Message</p>
             </div>
             <Handle
                 type="target"
-                position={Position.Bottom}  id="ecommerce-target"
+                position={Position.Bottom} id="ecommerce-target"
                 style={{
                     right: 'auto', left: 0, bottom: 20, width: 10,
                     height: 10,
-                    borderRadius: '50%',  // Circle
+                    borderRadius: '50%',  
                     background: 'white',
                     border: '1px solid grey'
                 }}
-            />
-            <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
-            >
-                Single
-                <Handle type="source" position={Position.Right} id="list" style={{
-                    left: 'auto', right: -10, bottom: 5, width: 10,
-                    height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-                }} />
+            /> */}
+            <div className='container mt-5'>
+                <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+                    Message
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                      id="ecommerce-target"
+                        style={{
+                            left: 0, bottom: 0, width: 10,
+                            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                        }}
+                    />
+                </div>
+                <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
+                >
+                    Single
+                    <Handle onClick={handleSingleProductClick} type="source" position={Position.Right} id="singleProduct" style={{
+                        left: 'auto', right: -10, bottom: 5, width: 10,
+                        height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                    }} />
+                </div>
+
+                <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
+                    Multiple
+                    <Handle onClick={handleProductSectionClick} type="source" position={Position.Right} id="productSection" style={{
+                        left: 'auto', right: -10, bottom: 5, width: 10,
+                        height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                    }} />
+                </div>
             </div>
 
-            <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
-                Multiple
-                <Handle type="source" position={Position.Right} id="ecommerce-source"  style={{
-                    left: 'auto', right: -10, bottom: 5, width: 10,
-                    height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-                }} />
-            </div>
-
-        </div>
+        </div >
     );
 });
 

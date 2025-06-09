@@ -2,25 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { Offcanvas, Form, Button } from 'react-bootstrap';
 
 const EcommerceEditor = ({ show, onClose, nodeId, content = {}, onSave }) => {
-  const [selectedCatalogId, setSelectedCatalogId] = useState(content?.catalogId || ''); // Changed state name to reflect purpose
+  // State to store the *label* of the selected catalog
+  const [selectedCatalogLabel, setSelectedCatalogLabel] = useState('');
 
   // Define your static catalog options
   const catalogOptions = [
-    { value: '', label: 'Select a Catalog ID' }, // Optional: default placeholder
+    { value: '', label: 'Select' }, // Default placeholder
     { value: 'catalog_123', label: 'My Product Catalog A' },
     { value: 'catalog_456', label: 'Summer Collection' },
     { value: 'catalog_789', label: 'Electronics Catalog' },
     { value: 'catalog_abc', label: 'Winter Wear' },
   ];
 
- useEffect(() => {
-    // Set the selectedCatalogId when the content prop changes (e.g., when a different node is selected)
-    setSelectedCatalogId(content?.catalogId || '');
+  // Effect to set the initial label when the component loads or content changes
+  useEffect(() => {
+    // Check if content.label exists, otherwise find the label based on content.catalogId
+    const initialLabel = content?.label || catalogOptions.find(
+      (option) => option.value === content?.catalogId
+    )?.label || '';
+    setSelectedCatalogLabel(initialLabel);
   }, [content]);
 
+  // Handle change in the select dropdown
+  const handleCatalogChange = (e) => {
+    const selectedValue = e.target.value;
+    const selectedOption = catalogOptions.find(
+      (option) => option.value === selectedValue
+    );
+    if (selectedOption) {
+      setSelectedCatalogLabel(selectedOption.label);
+    } else {
+      setSelectedCatalogLabel(''); // Reset if "Select" or no matching option
+    }
+  };
+
   const handleSave = () => {
-  // When saving, send the selectedCatalogId back
-    onSave(nodeId, { catalogId: selectedCatalogId }); // Changed 'label' to 'catalogId'
+    // Construct the data object exactly as you specified
+    const dataToSave = {
+      label: selectedCatalogLabel, // The label you want to save
+     
+    };
+
+    console.log('Saving data:', dataToSave); // Console verification with the full object
+    onSave(nodeId, dataToSave);
     onClose();
   };
 
@@ -31,11 +55,13 @@ const EcommerceEditor = ({ show, onClose, nodeId, content = {}, onSave }) => {
       </Offcanvas.Header>
       <Offcanvas.Body>
         <Form>
-          <Form.Group controlId="catalogIdSelect"> {/* Changed controlId */}
-            <Form.Label>Catalog ID</Form.Label>
+          <Form.Group controlId="catalogLabelSelect">
+            <Form.Label>Catalog Name</Form.Label>
             <Form.Select
-              value={selectedCatalogId}
-              onChange={(e) => setSelectedCatalogId(e.target.value)}
+              value={catalogOptions.find(
+                (option) => option.label === selectedCatalogLabel
+              )?.value || ''}
+              onChange={handleCatalogChange}
             >
               {catalogOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -44,7 +70,7 @@ const EcommerceEditor = ({ show, onClose, nodeId, content = {}, onSave }) => {
               ))}
             </Form.Select>
           </Form.Group>
-          <button type='button' onClick={handleSave} className="mt-3 btn offcanvas-save">
+          <button type="button" onClick={handleSave} className="mt-3 btn offcanvas-save">
             Save
           </button>
         </Form>

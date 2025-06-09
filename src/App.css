@@ -11,6 +11,15 @@
      /* overflow: hidden; */
   position: relative;
 }
+/* Ensures edges (on the pane) render above nodes */
+.react-flow__pane {
+    z-index: 2; /* Or any value higher than your node's z-index */
+}
+
+/* Ensures nodes stay below the edges, but still visible */
+.react-flow__node {
+    z-index: 1; /* A value lower than the pane's z-index */
+}
 
 .button-div {
   display: flex;
@@ -102,6 +111,7 @@
      min-width: 150px;
      min-height: 140px;
      border: 1px solid rgb(234, 228, 228);
+     /* z-index: 0 !important; */
 
 }
 .dotted-line {
