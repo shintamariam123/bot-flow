@@ -159,7 +159,7 @@ const ButtonNode = React.memo(({ data, id, }) => {
             </div>
 
             <div className="dotted-line mt-2" />
-            <div className="px-2 footer mt-3 d-flex align-self-end">
+            {/* <div className="px-2 footer mt-3 d-flex align-self-end">
                 <p>Message</p>
             </div>
             <Handle type="target" position={Position.Bottom} id="button-target" style={{
@@ -168,7 +168,20 @@ const ButtonNode = React.memo(({ data, id, }) => {
                 borderRadius: '50%',    // Circle
                 background: 'white',
                 border: '1px solid grey'
-            }} />
+            }} /> */}
+            <div className='container mt-5'>
+             <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>
+                                     Message
+                                    <Handle
+                                        type="target"
+                                        position={Position.Left}
+                                    id="button-target" 
+                                        style={{
+                                            left: 0, bottom: 0, width: 10,
+                                            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                                        }}
+                                    />
+                                </div>
             <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}>
                 Next
                 <Handle id='next-step' type="source" position={Position.Right} style={{
@@ -184,6 +197,7 @@ const ButtonNode = React.memo(({ data, id, }) => {
                     left: 'auto', right: -10, bottom: 5, width: 10,
                     height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                 }} />
+            </div>
             </div>
 
         </div>

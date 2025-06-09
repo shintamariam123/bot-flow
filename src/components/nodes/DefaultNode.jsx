@@ -1,11 +1,15 @@
-import React, { useState, memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import React, { useState, memo, useEffect } from 'react';
+import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 const DefaultNode = memo(({ id, data, onRemoveNode }) => {
   const content = data.content;
+   const updateNodeInternals = useUpdateNodeInternals();
+  
   // console.log(content);
-
+useEffect(() => {
+        updateNodeInternals(id); // <--- Call this with the node's ID
+    }, [updateNodeInternals, id]);
   const iconMap = {
     Text: "ic:baseline-textsms",
     Image: "mdi:image-outline",
@@ -308,11 +312,41 @@ const DefaultNode = memo(({ id, data, onRemoveNode }) => {
       </div>
 
       <div className="dotted-line mt-2" />
-      <div className="px-2 footer mt-2 d-flex align-self-end">
+      {/* <div className="px-2 footer mt-2 d-flex align-self-end">
         <p>Message</p>
         <p className="ms-auto">Compose Next Message</p>
-      </div>
-      <Handle
+      </div> */}
+     <div className='container mt-5'>
+                    <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>
+                         Message
+                        <Handle
+                            type="target"
+                            position={Position.Left}
+                          id='input'
+                            style={{
+                                left: 0, bottom: 0, width: 10,
+                                height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                            }}
+                        />
+                    </div>
+    
+                {/* Source Handle: Schedule Sequence Message */}
+                    <div style={{ position: 'absolute', right: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingRight: '15px' }}>
+                       Compose Next Message
+                        <Handle
+                            type="source"
+                            position={Position.Right}
+                           
+                            style={{
+                                right: 0, bottom: 0, width: 10,
+                                height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                            }}
+                        />
+                    </div>
+                </div>
+    
+    
+      {/* <Handle
         type="target"  id="input" 
         position={Position.Bottom}
         style={{
@@ -333,7 +367,7 @@ const DefaultNode = memo(({ id, data, onRemoveNode }) => {
           background: 'white',
           border: '1px solid black'
         }}
-      />
+      /> */}
     </div>
   );
 });

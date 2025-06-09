@@ -1,4 +1,4 @@
-import React, { useCallback, useState,useRef, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 
 import {
   ReactFlow,
@@ -7,7 +7,7 @@ import {
   Background,
   useNodesState,
   useEdgesState,
-  addEdge,
+  addEdge, MarkerType,
   useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
@@ -34,6 +34,13 @@ import SectionNode from './SectionNode';
 import SectionEditor from '../editors/SectionEditor';
 import RowSection from './RowSection';
 import RowSectionEditor from '../editors/RowSectionEditor';
+import Product from './Product';
+import ProductSection from './ProductSection';
+import ProductEditor from '../editors/ProductEditor'
+import ProductSectionEditor from '../editors/ProductSectionEditor'
+import SingleProduct from './SingleProduct';
+import SingleProductEditor from '../editors/SingleProductEditor';
+
 
 let id = 1;
 const getId = () => `node_${id++}`;
@@ -67,13 +74,18 @@ function FlowBuilder() {
   const [selectedSectionNode, setSelectedSectionNode] = useState(null);
   const [selectedRowSectionNode, setSelectedRowSectionNode] = useState(null);
 
+  const [selectedProductSectionNode, setSelectedProductSectionNode] = useState(null);
+  const [selectedProductNode, setSelectedProductNode] = useState(null);
+  const [selectedSingleProductNode, setSelectedSingleProductNode] = useState(null);
 
-    const nodesRef = useRef(nodes); // Create a ref to hold the latest nodes state
 
-    // Update the ref whenever 'nodes' state changes
-    useEffect(() => {
-        nodesRef.current = nodes;
-    }, [nodes]);
+
+  const nodesRef = useRef(nodes); // Create a ref to hold the latest nodes state
+
+  // Update the ref whenever 'nodes' state changes
+  useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
   const onNodeClick = useCallback((_event, node) => {
 
     switch (node.type) {
@@ -111,6 +123,15 @@ function FlowBuilder() {
         break;
       case 'rowSectionNode':
         setSelectedRowSectionNode(node);
+        break;
+      case 'productSectionNode':
+        setSelectedProductSectionNode(node);
+        break;
+      case 'productsSectionNode':
+        setSelectedProductNode(node);
+        break;
+      case 'singleProductNode':
+        setSelectedSingleProductNode(node);
         break;
       default:
         break;
@@ -162,8 +183,6 @@ function FlowBuilder() {
     );
   }, [setNodes, setNodeContentMap]);
 
-
-
   const navigate = useNavigate();
 
   const onRemoveNode = useCallback((nodeId) => {
@@ -200,9 +219,13 @@ function FlowBuilder() {
     if (selectedRowSectionNode && selectedRowSectionNode.id === nodeId) {
       setSelectedRowSectionNode(null);
     }
-  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode]);
-
-
+    if (selectedProductSectionNode && selectedProductSectionNode.id === nodeId) {
+      setSelectedProductSectionNode(null);
+    }
+    if (selectedProductNode && selectedProductNode.id === nodeId) {
+      setSelectedProductNode(null);
+    }
+  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode, selectedProductSectionNode, selectedProductNode]);
 
   const handleSubscribeToSequence = useCallback((buttonNodeId) => {
     const buttonNode = nodes.find(node => node.id === buttonNodeId);
@@ -221,6 +244,9 @@ function FlowBuilder() {
       data: {
         label: `New Sequence from Button`,
         content: {}, // Initialize content as empty object
+        style: {
+          zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+        },
       },
     };
     newNodes.push(sequenceNode);
@@ -231,7 +257,11 @@ function FlowBuilder() {
       sourceHandle: 'subscribe',
       target: sequenceNodeId,
       targetHandle: 'subscribe-target',
-      type: 'smoothstep',
+      type: 'default',
+     
+      style: {
+        zIndex: 1000, // Make sure this is higher than your node's z-index
+      },
     });
 
     for (let i = 0; i < 3; i++) {
@@ -247,6 +277,9 @@ function FlowBuilder() {
         data: {
           label: `Send Message After ${i + 1}`,
           content: {}, // Initialize content as empty object
+          style: {
+            zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+          },
         },
       };
 
@@ -257,7 +290,7 @@ function FlowBuilder() {
         sourceHandle: 'schedule-sequence-msg',
         target: sendMessageNodeId,
         targetHandle: 'send-after',
-        type: 'smoothstep',
+        type: 'default',
       });
     }
 
@@ -265,71 +298,198 @@ function FlowBuilder() {
     setEdges((eds) => [...eds, ...newEdges]);
   }, [nodes, setNodes, setEdges]); // Removed nodeContentMap from dependencies here
 
- const handleSubscribeToSection = useCallback((listNodeId) => {
+  const handleSubscribeToSection = useCallback((listNodeId) => {
     const listNode = nodes.find(node => node.id === listNodeId);
     if (!listNode) { console.error('list node not found:', listNodeId); return; }
     const newNodes = [];
     const newEdges = [];
     const sectionNodeId = getId(); // This generates 'node_9'
     const sectionNodePosition = {
-        x: listNode.position.x + 300,
-        y: listNode.position.y + 50,
+      x: listNode.position.x + 300,
+      y: listNode.position.y + 50,
     };
     const sectionNode = {
-        id: sectionNodeId,
-        type: 'sectionNode',
-        position: sectionNodePosition,
-        data: {
-            label: `New section from list`,
-            content: {},
+      id: sectionNodeId,
+      type: 'sectionNode',
+      position: sectionNodePosition,
+      data: {
+        label: `New section from list`,
+        content: {},
+        style: {
+          zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
         },
+      },
     };
     newNodes.push(sectionNode);
 
     newEdges.push({
-        id: `e-<span class="math-inline">\{listNodeId\}\-</span>{sectionNodeId}-list-subscribe`,
-        source: listNodeId,
-        sourceHandle: 'section',
-        target: sectionNodeId,
-        targetHandle: 'section-target',
-        type: 'smoothstep',
+      id: `e-<span class="math-inline">\{listNodeId\}\-</span>{sectionNodeId}-list-subscribe`,
+      source: listNodeId,
+      sourceHandle: 'section',
+      target: sectionNodeId,
+      targetHandle: 'section-target',
+      type: 'default',
+
     });
 
     for (let i = 0; i < 3; i++) {
-        const rowNodeId = getId();
-        const rowNodePosition = {
-            x: sectionNodePosition.x + 300,
-            y: sectionNodePosition.y + (i * 180) - 50,
-        };
-        const rowSectionNode = {
-            id: rowNodeId,
-            type: 'rowSectionNode',
-            position: rowNodePosition,
-            data: {
-                label: `Row ${i + 1}`,
-                content: {},
-            },
-        };
-        newNodes.push(rowSectionNode);
-        newEdges.push({
-            id: `e-<span class="math-inline">\{sectionNodeId\}\-row\-msg\-</span>{rowNodeId}-row-target-${i}`,
-            source: sectionNodeId,
-            sourceHandle: 'row-msg',
-            target: rowNodeId,
-            targetHandle: 'row-target',
-            type: 'smoothstep',
-        });
+      const rowNodeId = getId();
+      const rowNodePosition = {
+        x: sectionNodePosition.x + 300,
+        y: sectionNodePosition.y + (i * 180) - 50,
+      };
+      const rowSectionNode = {
+        id: rowNodeId,
+        type: 'rowSectionNode',
+        position: rowNodePosition,
+        data: {
+          label: `Row ${i + 1}`,
+          content: {},
+          style: {
+            zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+          },
+        },
+      };
+      newNodes.push(rowSectionNode);
+      newEdges.push({
+        id: `e-<span class="math-inline">\{sectionNodeId\}\-row\-msg\-</span>{rowNodeId}-row-target-${i}`,
+        source: sectionNodeId,
+        sourceHandle: 'row-msg',
+        target: rowNodeId,
+        targetHandle: 'row-target',
+        type: 'default',
+      
+      });
     }
 
     console.log('handleSubscribeToSection: New nodes to add:', newNodes); // ADD THIS
     setNodes((nds) => {
-        const updatedNodes = [...nds, ...newNodes];
-        console.log('handleSubscribeToSection: Nodes after setNodes:', updatedNodes); // ADD THIS
-        return updatedNodes;
+      const updatedNodes = [...nds, ...newNodes];
+      console.log('handleSubscribeToSection: Nodes after setNodes:', updatedNodes); // ADD THIS
+      return updatedNodes;
     });
     setEdges((eds) => [...eds, ...newEdges]);
-}, [nodes, setNodes, setEdges]); // Ensure `nodes` is a dependency here.
+  }, [nodes, setNodes, setEdges]); // Ensure `nodes` is a dependency here.
   // FlowBuilder.js (Excerpt from spawnConnectedNode)
+
+  const handleSubscribeToProductSection = useCallback((ecommerceNodeId) => {
+    const ecommerceNode = nodes.find(node => node.id === ecommerceNodeId);
+    if (!ecommerceNode) { console.error('ecommerce node not found:', ecommerceNodeId); return; }
+    const newNodes = [];
+    const newEdges = [];
+    const productSectionNodeId = getId(); // This generates 'node_9'
+    const productSectionNodePosition = {
+      x: ecommerceNode.position.x + 300,
+      y: ecommerceNode.position.y + 50,
+    };
+    const productSectionNode = {
+      id: productSectionNodeId,
+      type: 'productSectionNode',
+      position: productSectionNodePosition,
+      data: {
+        label: `New product section from ecommerce`,
+        content: {},
+        content: {},
+        style: {
+          zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+        },
+      },
+    };
+    newNodes.push(productSectionNode);
+
+    newEdges.push({
+      id: `e-<span class="math-inline">\{ecommerceNodeId\}\-</span>{productSectionNodeId}-ecommerce-subscribe`,
+      source: ecommerceNodeId,
+      sourceHandle: 'productSection',
+      target: productSectionNodeId,
+      targetHandle: 'productSection-target',
+      type: 'default',
+     
+    });
+
+    for (let i = 0; i < 3; i++) {
+      const productNodeId = getId();
+      const productNodePosition = {
+        x: productSectionNodePosition.x + 300,
+        y: productSectionNodePosition.y + (i * 180) - 50,
+      };
+      const productsSectionNode = {
+        id: productNodeId,
+        type: 'productsSectionNode',
+        position: productNodePosition,
+        data: {
+          label: `Product ${i + 1}`,
+          content: {},
+          style: {
+            zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+          },
+        },
+      };
+      newNodes.push(productsSectionNode);
+      newEdges.push({
+        id: `e-<span class="math-inline">\{productSectionNodeId\}\-product\-msg\-</span>{productNodeId}-product-target-${i}`,
+        source: productSectionNodeId,
+        sourceHandle: 'product-msg',
+        target: productNodeId,
+        targetHandle: 'product-target',
+        type: 'default',
+      
+      });
+    }
+
+    console.log('handleSubscribeToproductSection: New nodes to add:', newNodes); // ADD THIS
+    setNodes((nds) => {
+      const updatedNodes = [...nds, ...newNodes];
+      console.log('handleSubscribeToproductSection: Nodes after setNodes:', updatedNodes); // ADD THIS
+      return updatedNodes;
+    });
+    setEdges((eds) => [...eds, ...newEdges]);
+  }, [nodes, setNodes, setEdges]);
+
+  const handleSubscribeToSingleProduct = useCallback((ecommerceNodeId) => {
+    const ecommerceNode = nodes.find(node => node.id === ecommerceNodeId);
+    if (!ecommerceNode) { console.error('ecommerce node not found:', ecommerceNodeId); return; }
+    const newNodes = [];
+    const newEdges = [];
+    const singleProductNodeId = getId(); // This generates 'node_9'
+    const singleProductNodePosition = {
+      x: ecommerceNode.position.x + 300,
+      y: ecommerceNode.position.y + 50,
+    };
+    const singleProductNode = {
+      id: singleProductNodeId,
+      type: 'singleProductNode',
+      position: singleProductNodePosition,
+      data: {
+        label: `New single product section from ecommerce`,
+        content: {},
+        style: {
+          zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+        },
+        onRemoveNode: onRemoveNode,
+        onEditSingleProductNode: (nodeId) => setSelectedSingleProductNode(nodes.find(n => n.id === nodeId)),
+      },
+    };
+    newNodes.push(singleProductNode);
+
+    newEdges.push({
+      id: `e-<span class="math-inline">\{ecommerceNodeId\}\-</span>{singleProductNodeId}-ecommerce-single-subscribe`,
+      source: ecommerceNodeId,
+      sourceHandle: 'singleProduct',
+      target: singleProductNodeId,
+      targetHandle: 'singleProduct-target',
+      type: 'default',
+     
+    });
+
+    console.log('handleSubscribeToproductSection: New nodes to add:', newNodes); // ADD THIS
+    setNodes((nds) => {
+      const updatedNodes = [...nds, ...newNodes];
+      console.log('handleSubscribeToproductSection: Nodes after setNodes:', updatedNodes); // ADD THIS
+      return updatedNodes;
+    });
+    setEdges((eds) => [...eds, ...newEdges]);
+  }, [nodes, setNodes, setEdges, onRemoveNode]);
 
   const spawnConnectedNode = useCallback((sourceNodeId, sourceHandle, type) => {
 
@@ -339,6 +499,7 @@ function FlowBuilder() {
       list: 'listNode',
       ecommerce: 'ecommerceNode',
       reply: 'defaultNode',
+
     };
 
     const targetHandleMap = {
@@ -378,7 +539,9 @@ function FlowBuilder() {
         onEditEcommerceNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('ecommerceNode'); },
         onEditButtonNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('buttonNode'); },
         onSubscribeToSequence: handleSubscribeToSequence, // Ensure this is passed to ButtonNode if needed
-        onSubscribeToSection: handleSubscribeToSection
+        onSubscribeToSection: handleSubscribeToSection,
+        onSubscribeToProductSection: handleSubscribeToProductSection,
+        onSubscribeToSingleProduct: handleSubscribeToSingleProduct
       },
     };
 
@@ -388,13 +551,12 @@ function FlowBuilder() {
       sourceHandle, // This is the ID from the calling node (e.g., "list" or "ecommerce" from InteractiveNode)
       target: newNodeId,
       targetHandle: targetHandleMap[type], // --- NEW: Use the mapped target handle ---
-      type: 'smoothstep',
+      type: 'default',
     };
 
     setNodes((nds) => [...nds, newNode]);
     setEdges((eds) => [...eds, newEdge]);
-  }, [setNodes, setEdges, nodes, onRemoveNode, handleSubscribeToSequence, handleSubscribeToSection]); // Keep dependencies up to date
-
+  }, [setNodes, setEdges, nodes, onRemoveNode, handleSubscribeToSequence, handleSubscribeToSection, handleSubscribeToProductSection]); // Keep dependencies up to date
 
   const handleSaveSequenceContent = useCallback((content) => {
     if (!selectedSequenceNode) return;
@@ -408,32 +570,25 @@ function FlowBuilder() {
     setSelectedSendMessageNode(null);
   }, [selectedSendMessageNode, handleSaveNodeContent]);
 
-  // const handleSaveSectionContent = useCallback((content) => {
-  //   if (!selectedSectionNode) return;
-  //   handleSaveNodeContent(selectedSectionNode.id, content); // Use unified handler
-  //   setSelectedSectionNode(null);
-  // }, [selectedSectionNode, handleSaveNodeContent]);
-
-    // This function will be passed as `onSave` to SectionEditor
-const handleSaveSectionContent = useCallback((nodeId, newContent) => {
+  const handleSaveSectionContent = useCallback((nodeId, newContent) => {
     setNodes((nds) =>
-        nds.map((node) => {
-            if (node.id === nodeId) {
-                // Return a new node object with updated data.content
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        content: newContent, // <--- UPDATE THE CONTENT HERE
-                    },
-                };
-            }
-            return node;
-        })
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          // Return a new node object with updated data.content
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: newContent, // <--- UPDATE THE CONTENT HERE
+            },
+          };
+        }
+        return node;
+      })
     );
-}, [setNodes]); 
+  }, [setNodes]);
 
- const handleSaveRowContent = useCallback((nodeId, content) => {
+  const handleSaveRowContent = useCallback((nodeId, content) => {
     // This is crucial: Use nodeId to find and update the correct node
     setNodes((nds) =>
       nds.map((node) =>
@@ -449,6 +604,59 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
       )
     );
     setSelectedRowSectionNode(null); // Close the editor after saving
+  }, [setNodes]);
+
+  const handleSaveProductSectionContent = useCallback((nodeId, newContent) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          // Return a new node object with updated data.content
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: newContent, // <--- UPDATE THE CONTENT HERE
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [setNodes]);
+
+  const handleSaveProductContent = useCallback((nodeId, content) => {
+    // This is crucial: Use nodeId to find and update the correct node
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId
+          ? {
+            ...node,
+            data: {
+              ...node.data,
+              content: content,
+            },
+          }
+          : node
+      )
+    );
+    setSelectedProductNode(null); // Close the editor after saving
+  }, [setNodes]);
+  const handleSaveSingleProductContent = useCallback((nodeId, newContent) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          // Return a new node object with updated data.content
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: newContent, // <--- UPDATE THE CONTENT HERE
+            },
+          };
+        }
+        return node;
+      })
+    );
   }, [setNodes]);
 
 
@@ -522,7 +730,7 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
             sourceHandle: 'schedule-sequence-msg',
             target: sendMessageNodeId,
             targetHandle: 'send-after',
-            type: 'smoothstep',
+            type: 'default',
           });
         }
         setNodes((nds) => nds.concat(newNodes));
@@ -552,7 +760,6 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
     [setNodes, setEdges, screenToFlowPosition, onRemoveNode]
   );
 
-
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -567,7 +774,6 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
       : node
   );
 
-  // Register node types
   const nodeTypes = useMemo(() => ({
     startBot: StartBotNode,
     defaultNode: (nodeProps) => (
@@ -576,7 +782,6 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
         onRemoveNode={onRemoveNode} // Explicitly pass here
       />
     ),
-
     interactiveNode: InteractiveNode,
     buttonNode: ButtonNode,
     listNode: ListNode,
@@ -619,6 +824,42 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
         onEditRowSectionNode={(nodeId) => setSelectedRowSectionNode(nodes.find(n => n.id === nodeId))}
         targetHandleId="row-target" />
     ),
+    productSectionNode: (nodeProps) => (
+      <ProductSection
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditProductSectionNode={(nodeId) => {
+          console.log('FlowBuilder: received nodeId for editor:', nodeId); // ADD THIS
+          const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+          console.log('Attempting to open editor for node:', nodeToEdit);
+          setSelectedProductSectionNode(nodeToEdit);
+        }}
+        targetHandleId="productSection-target"
+      />
+    ),
+    productsSectionNode: (nodeProps) => (
+      <Product
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditProductNode={(nodeId) => setSelectedProductNode(nodes.find(n => n.id === nodeId))}
+        targetHandleId="product-target"
+
+      />
+    ),
+    singleProductNode: (nodeProps) => (
+      <SingleProduct
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditSingleProductNode={(nodeId) => {
+          console.log('FlowBuilder: received nodeId for editor:', nodeId); // ADD THIS
+          const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+          console.log('Attempting to open editor for node:', nodeToEdit);
+          setSelectedSingleProductNode(nodeToEdit);
+        }}
+        targetHandleId="singleProduct-target"
+      />
+    )
+
   }), []);
 
   useEffect(() => {
@@ -685,6 +926,8 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
                 setSelectedNode(nodes.find(n => n.id === id));
                 setEditorType('ecommerceNode');
               },
+              onSubscribeToProductSection: handleSubscribeToProductSection,
+              onSubscribeToSingleProduct: handleSubscribeToSingleProduct
             },
           };
         } else if (node.type === 'sequenceNode') {
@@ -731,10 +974,47 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
               onEditRowSectionNode: (nodeId) => setSelectedRowSectionNode(nodes.find(n => n.id === nodeId)),
             },
           };
+        } else if (node.type === 'productSectionNode') { // **Updated useEffect for SectionNode**
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onRemoveNode: onRemoveNode,
+              onEditProductSectionNode: (nodeId) => {
+                console.log('FlowBuilder useEffect: received nodeId for editor:', nodeId); // ADD THIS
+                const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+                console.log('FlowBuilder useEffect: Attempting to open editor for node:', nodeToEdit);
+                setSelectedProductSectionNode(nodeToEdit);
+              },
+            },
+          };
+        } else if (node.type === 'productsSectionNode') { // **Updated useEffect for RowSectionNode**
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onRemoveNode: onRemoveNode,
+              onEditProductNode: (nodeId) => setSelectedProductNode(nodes.find(n => n.id === nodeId)),
+            },
+          };
+        } else if (node.type === 'singleProductNode') { // **Updated useEffect for SectionNode**
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onRemoveNode: onRemoveNode,
+              onEditSingleProductNode: (nodeId) => {
+                console.log('FlowBuilder useEffect: received nodeId for editor:', nodeId); // ADD THIS
+                const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+                console.log('FlowBuilder useEffect: Attempting to open editor for node:', nodeToEdit);
+                setSelectedSingleProductNode(nodeToEdit);
+              },
+            },
+          };
         }
         return node;
       }));
-  }, [setNodes, onRemoveNode, spawnConnectedNode, handleSubscribeToSequence, handleSubscribeToSection]);
+  }, [setNodes, onRemoveNode, spawnConnectedNode, handleSubscribeToSequence, handleSubscribeToSection, handleSubscribeToProductSection, handleSubscribeToSingleProduct]);
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
@@ -753,6 +1033,16 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
         <ReactFlow
           nodes={updatedNodes}
           edges={edges}
+          defaultEdgeOptions={{
+            type: 'default',
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: 'black',
+            },
+            style: { // <--- Add style here
+              zIndex: 1000, // A high value to ensure visibility
+            },
+          }}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -811,22 +1101,51 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
         />
       )}
       {selectedSectionNode && (
-         <SectionEditor
-        show={true} // It's true because selectedSectionNode is not null
-        nodeId={selectedSectionNode.id}
-        // Pass the current content from the selected node's data
-        content={selectedSectionNode.data?.content || {}}
-        onSave={handleSaveSectionContent} // <--- Pass your new save handler
-        onClose={() => setSelectedSectionNode(null)}
-    />
+        <SectionEditor
+          show={true} // It's true because selectedSectionNode is not null
+          nodeId={selectedSectionNode.id}
+          // Pass the current content from the selected node's data
+          content={selectedSectionNode.data?.content || {}}
+          onSave={handleSaveSectionContent} // <--- Pass your new save handler
+          onClose={() => setSelectedSectionNode(null)}
+        />
       )}
       {selectedRowSectionNode && (
         <RowSectionEditor
-       show={true} // Set show to true when selectedRowSectionNode is present
-    nodeId={selectedRowSectionNode.id} // Pass the ID of the selected node
-    content={selectedRowSectionNode.data?.content || {}} // Access content from the selected node's data
-    onSave={handleSaveRowContent}
-    onClose={() => setSelectedRowSectionNode(null)}
+          show={true}
+          nodeId={selectedRowSectionNode.id}
+          content={selectedRowSectionNode.data?.content || {}} // Access content from the selected node's data
+          onSave={handleSaveRowContent}
+          onClose={() => setSelectedRowSectionNode(null)}
+        />
+      )}
+      {selectedProductSectionNode && (
+        <ProductSectionEditor
+          show={true} // It's true because selectedSectionNode is not null
+          nodeId={selectedProductSectionNode.id}
+          // Pass the current content from the selected node's data
+          content={selectedProductSectionNode.data?.content || {}}
+          onSave={handleSaveProductSectionContent} // <--- Pass your new save handler
+          onClose={() => setSelectedProductSectionNode(null)}
+        />
+      )}
+      {selectedProductNode && (
+        <ProductEditor
+          show={true}
+          nodeId={selectedProductNode.id}
+          content={selectedProductNode.data?.content || {}} // Access content from the selected node's data
+          onSave={handleSaveProductContent}
+          onClose={() => setSelectedProductNode(null)}
+        />
+      )}
+      {selectedSingleProductNode && (
+        <SingleProductEditor
+          show={true} // It's true because selectedSectionNode is not null
+          nodeId={selectedSingleProductNode.id}
+          // Pass the current content from the selected node's data
+          content={selectedSingleProductNode.data?.content || {}}
+          onSave={handleSaveSingleProductContent} // <--- Pass your new save handler
+          onClose={() => setSelectedSingleProductNode(null)}
         />
       )}
       {editorType === 'buttonNode' && selectedNode && (
@@ -851,30 +1170,18 @@ const handleSaveSectionContent = useCallback((nodeId, newContent) => {
             setEditorType(null);
           }} />
       )}
-
-      {/* {editorType === 'listNode' && selectedNode && (
-        <ListEditor
-          show={editorType === 'listNode'}
-          onClose={() => {
-            setSelectedNode(null);
-            setEditorType(null);
-          }}
-          nodeId={selectedNode.id}
-          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
-          onSave={handleSaveNodeContent} // Use the unified handler
-        />
-      )} */}
       {editorType === 'ecommerceNode' && selectedNode && (
         <EcommerceEditor
-          show={editorType === 'ecommerceNode'}
+          show={true}
+          nodeId={selectedNode?.id}
+          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
+          onSave={handleSaveNodeContent} // Use the unified handler
           onClose={() => {
             setSelectedNode(null);
             setEditorType(null);
           }}
-          nodeId={selectedNode.id}
-          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
-          onSave={handleSaveNodeContent} // Use the unified handler
-        />)}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 // Wrap the component with React.memo
@@ -7,14 +7,17 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
     // console.log(`Rendering SequenceNode with ID: ${id}`);
     const [showClose, setShowClose] = useState(false);
     const [displayedContent, setDisplayedContent] = useState({});
+    const updateNodeInternals = useUpdateNodeInternals();
+
 
     useEffect(() => {
         if (data.content) {
+            updateNodeInternals(id);
             setDisplayedContent(data.content);
         }
     }, [data.content]); // Dependency array: re-run when data.content changes
 
-   
+
 
     // Right-click handler
     const handleContextMenu = (e) => {
@@ -119,34 +122,47 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
 
             <div className="dotted-line mt-3 " />
 
-            <div className="px-2 footer mt-2 d-flex align-self-end">
+            {/* <div className="px-2 footer mt-2 d-flex align-self-end">
                 <p style={{ fontSize: '6px' }}>Setup New <br /> Sequence</p>
-            </div>
+            </div> */}
 
             {/* Target Handle: Setup New Sequence */}
-            <Handle
+            {/* <Handle
                 type="target"
                 position={Position.Bottom}
                 id="subscribe-target"
                 style={{
-                    right: 'auto', left: 0, bottom: 20, width: 10,
+                   left: 0, bottom: 20, width: 10,
                     height: 10,
                     borderRadius: '50%',  // Circle
                     background: 'white',
                     border: '1px solid grey'
                 }}
-            />
+            /> */}
+
+             <div className='container mt-5'>
+                <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>
+                    Schedule Sequence <br /> Message
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                        id="subscribe-target"
+                        style={{
+                            left: 0, bottom: 0, width: 10,
+                            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                        }}
+                    />
+                </div>
 
             {/* Source Handle: Schedule Sequence Message */}
-            <div className='container'>
-                <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
+                <div style={{ position: 'absolute', right: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingRight: '15px' }}>
                     Schedule Sequence <br /> Message
                     <Handle
                         type="source"
                         position={Position.Right}
                         id="schedule-sequence-msg"
                         style={{
-                            left: 'auto', right: -10, bottom: 5, width: 10,
+                            right: 0, bottom: 0, width: 10,
                             height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                         }}
                     />

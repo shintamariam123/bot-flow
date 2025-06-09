@@ -112,13 +112,12 @@ const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMes
         }
       </div>
 
-      <div className="dotted-line mt-3 " />
+      <div className="dotted-line mt-3 mb-5 " />
 
-      <div className="px-2 footer mt-2 d-flex align-self-end">
+      {/* <div className="px-2 footer mt-2 d-flex align-self-end">
         <p style={{ fontSize: '6px' }}>Send Message After</p>
       </div>
 
-      {/* Target Handle: Send Message After */}
       <Handle
         type="target"
         position={Position.Bottom}
@@ -126,25 +125,41 @@ const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMes
         style={{
           right: 'auto', left: 0, bottom: 15, width: 10,
           height: 10,
-          borderRadius: '50%',  // Circle
+          borderRadius: '50%',
           background: 'white',
           border: '1px solid grey'
         }}
-      />
+      /> */}
+      <div className='container mt-4'>
+        <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+          Message
+          <Handle
+            type="target"
+            position={Position.Left}
+            id="send-after"
+            style={{
+              left: 0, bottom: 0, width: 10,
+              height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+            }}
+          />
+        </div>
 
-      {/* Source Handle: Schedule Msg */}
-      <div style={{ position: 'absolute', right: 10, bottom: 10, fontSize: '6px', cursor: 'pointer' }}>
-        Schedule Message
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="schedule-msg"
-          style={{
-            left: 'auto', right: -10, bottom: 5, width: 10,
-            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-          }}
-        />
+        {/* Source Handle: Schedule Msg */}
+        <div style={{ position: 'absolute', right: 10, bottom: 20, fontSize: '6px', cursor: 'pointer' }}>
+          Schedule Message
+          <Handle
+            type="source"
+            position={Position.Right}
+            id="schedule-msg"
+            style={{
+              left: 'auto', right: -10, bottom: 5, width: 10,
+              height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+            }}
+          />
+        </div>
+
       </div>
+
     </div >
   );
 }); // Don't forget to close the React.memo call

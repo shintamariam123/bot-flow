@@ -23,16 +23,16 @@ const ListNode = React.memo(({ data, id }) => {
 
         if (onRemoveNode && id) {
             onRemoveNode(id);
-        } 
+        }
         setShowClose(false);
     }, [onRemoveNode, id]);
 
-        const handleSectionClick = useCallback((e) => {
-             e.stopPropagation();
-              console.log('Triggering handleSubscribeToSection for list node:', id);
-             onSubscribeToSection?.(id);
-         }, [onSubscribeToSection, id]);
-     
+    const handleSectionClick = useCallback((e) => {
+        e.stopPropagation();
+        console.log('Triggering handleSubscribeToSection for list node:', id);
+        onSubscribeToSection?.(id);
+    }, [onSubscribeToSection, id]);
+
 
     return (
         <div
@@ -88,8 +88,8 @@ const ListNode = React.memo(({ data, id }) => {
 
                 {content.label ? (
                     <div className='p-1 d-flex flex-column align-items-center w-100'>
-                        <div className='delay-box pt-1 w-fit-content'>
-                            <p style={{ fontSize: '8px', margin: 0, color: 'blue' }}>{content.label} </p>
+                        <div className='reply-box pt-1 w-fit-content'>
+                            <p style={{ fontSize: '8px', margin: 0 }}>{content.label} </p>
                         </div>
 
                     </div>
@@ -100,8 +100,8 @@ const ListNode = React.memo(({ data, id }) => {
                 )}
             </div>
 
-            <div className="dotted-line mt-2" />
-            <div className="px-2 footer mt-3 d-flex align-self-end">
+            <div className="dotted-line mt-1 " />
+            {/* <div className="px-2 footer mt-3 d-flex align-self-end">
                 <p>Message</p>
             </div>
             <Handle
@@ -110,19 +110,34 @@ const ListNode = React.memo(({ data, id }) => {
                 style={{
                     right: 'auto', left: 0, bottom: 20, width: 10,
                     height: 10,
-                    borderRadius: '50%',  // Circle
+                    borderRadius: '50%', 
                     background: 'white',
                     border: '1px solid grey'
                 }}
-            />
-            <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
-            >
-                Sections
-                <Handle onClick={handleSectionClick}  type="source" position={Position.Right} id="section" style={{
-                    left: 'auto', right: -10, bottom: 5, width: 10,
-                    height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-                }} />
+            /> */}
+            <div className='container mt-5'>
+                <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+                    Message
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                       id="list-target"
+                        style={{
+                            left: 0, bottom: 0, width: 10,
+                            height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                        }}
+                    />
+                </div>
+                <div style={{ position: 'absolute', right: 10, bottom: 20, fontSize: '6px', cursor: 'pointer' }}
+                >
+                    Sections
+                    <Handle onClick={handleSectionClick} type="source" position={Position.Right} id="section" style={{
+                        left: 'auto', right: -10, bottom: 5, width: 10,
+                        height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+                    }} />
+                </div>
             </div>
+
 
 
 

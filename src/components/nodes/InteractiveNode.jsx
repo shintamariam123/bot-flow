@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import React, { useState, useEffect } from 'react';
+import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 const InteractiveNode = React.memo(({ id, data }) => {
   const { onRemoveNode, onEditInteractiveNode, onCloseInteractiveEditor, spawnConnectedNode, content } = data;
 
   const [showClose, setShowClose] = useState(false);
-
+  const updateNodeInternals = useUpdateNodeInternals();
   const isContentEmpty = !content || Object.keys(content).length === 0;
+
+
+  useEffect(() => {
+    updateNodeInternals(id); // <--- Call this with the node's ID
+  }, [data.content, data.label, updateNodeInternals, id]);
 
   // Right-click handler
   const handleContextMenu = (e) => {
@@ -25,7 +30,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
       // Only trigger editor on left-click (e.button === 0)
       if (e.type === 'click' && e.button === 0) {
         console.log('Calling onEditInteractiveNode for ID:', id);
-         onEditInteractiveNode?.(id); // This will call the function passed from FlowBuilder
+        onEditInteractiveNode?.(id); // This will call the function passed from FlowBuilder
       }
     }
   };
@@ -63,7 +68,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
         )}
         <div className=" d-flex flex-column align-items-center w-100">
           {/* Your existing content */}
-          <div className="d-flex align-self-start align-items-center gap-1 mb-3 p-2">
+          <div className="d-flex align-self-start align-items-center gap-1 mb-2 p-2">
             <Icon icon={iconMap[data.type]} width="10" height="10" />
             <p className="default-heading mb-0">{data.type}</p>
           </div>
@@ -131,28 +136,34 @@ const InteractiveNode = React.memo(({ id, data }) => {
               )}
             </div>
           ) : (
-            // This 'thumb' icon will now only appear if content is empty.
-            // The node itself will open the editor on click.
             <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-              <Icon icon="mdi:thumb-up" width="20" height="20" color='black'  style={{cursor:'pointer'}}/>
+              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )}
         </div>
 
-        <div className="dotted-line mt-2 mb-5" />
-        <div className="px-2 footer mt-2 d-flex align-self-end">
-          <p>Reply</p>
-        </div>
-        {/* Four source handles */}
-        <Handle type="target"    position={Position.Bottom} style={{
-          right: 'auto', left: 0, bottom: 20, width: 10,
-          height: 10,
-          borderRadius: '50%',  // Circle
-          background: 'white',
-          border: '1px solid grey'
-        }} />
+        <div style={{borderBottom:'1rem'}}  className="dotted-line " />
+       
 
-        <div className='container'>
+        <div className='container'  style={{
+                        position: 'relative', // IMPORTANT: For absolute positioning of handles within this div
+                        height: 'auto', // Let content define height
+                        minHeight: '70px', // Give some minimum height for spacing
+                        padding: '10px 0', // Add some padding
+                        width: '100%',
+                    }}>
+          <div  style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+            Reply
+            <Handle
+              type="target"
+              position={Position.Left}
+
+              style={{
+                left: 0, bottom: 0, width: 10,
+                height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+              }}
+            />
+          </div>
           {/* Labels for each source handle */}
           <div style={{ position: 'absolute', right: 10, bottom: 55, fontSize: '6px' }}>
             Next
