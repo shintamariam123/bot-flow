@@ -4,9 +4,8 @@ import { Icon } from '@iconify/react';
 import { Handle, Position } from '@xyflow/react';
 
 const ListNode = React.memo(({ data, id }) => {
-    const { onEditListNode, onRemoveNode, onSubscribeToSection } = data
+    const { onRemoveNode, onSubscribeToSection } = data
     const [showClose, setShowClose] = useState(false);
-    const content = data.content;
 
     // Right-click handler
     const handleContextMenu = (e) => {
@@ -86,18 +85,19 @@ const ListNode = React.memo(({ data, id }) => {
                     </p>
                 </div>
 
-                {content.label ? (
-                    <div className='p-1 d-flex flex-column align-items-center w-100'>
-                        <div className='reply-box pt-1 w-fit-content'>
-                            <p style={{ fontSize: '8px', margin: 0 }}>{content.label} </p>
-                        </div>
+                <div className='p-1 d-flex flex-column align-items-center w-100'>
+                    <div style={{
+                        border: '2px dotted rgb(112, 199, 233)', // Light orange border
+                        backgroundColor: 'rgb(228, 242, 247)', // Lighter orange background
+                        padding: '10px 30px',
+                        borderRadius: '5px',
+                
+                    }}>
+                        <p className='text-center' style={{ fontSize: '10px', margin: 0 }}>List Messages</p>
+                    </div>
 
-                    </div>
-                ) : (
-                    <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
-                    </div>
-                )}
+                </div>
+
             </div>
 
             <div className="dotted-line mt-1 " />
@@ -121,7 +121,7 @@ const ListNode = React.memo(({ data, id }) => {
                     <Handle
                         type="target"
                         position={Position.Left}
-                       id="list-target"
+                        id="list-target"
                         style={{
                             left: 0, bottom: 0, width: 10,
                             height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'

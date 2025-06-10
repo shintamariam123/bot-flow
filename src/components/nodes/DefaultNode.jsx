@@ -44,7 +44,7 @@ useEffect(() => {
       (data.type === 'Whatsapp' && !content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && !content.delay)
     ) {
       return (
-        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
       );
     }
 
@@ -64,7 +64,7 @@ useEffect(() => {
               </div>
             )}
             {(!content.text && content.delay === undefined) && (
-              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             )}
           </div>
         );
@@ -80,7 +80,7 @@ useEffect(() => {
               <div className='reply-box mt-1 w-fit-content'>
 
                 <img src={content.image} alt="node-img" /></div> :
-              ((!content.image && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+              ((!content.image && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
           </div>
         );
       case 'Video':
@@ -98,7 +98,7 @@ useEffect(() => {
                   Your browser does not support the video element.
                 </video>
               </div>
-            ) : ((!content.video && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+            ) : ((!content.video && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
           </div>
         );
       case 'Audio':
@@ -116,7 +116,7 @@ useEffect(() => {
                   Your browser does not support the audio element.
                 </audio>
               </div>
-            ) : ((!content.audio && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+            ) : ((!content.audio && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
           </div>
         );
       case 'File':
@@ -172,7 +172,7 @@ useEffect(() => {
             );
           }
         }
-        return <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />; // Fallback for file with no URL/type or content.delay === undefined
+        return <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />; // Fallback for file with no URL/type or content.delay === undefined
       case 'Location':
         return (
           <div className='p-1 d-flex flex-column align-items-center w-100'>
@@ -187,7 +187,7 @@ useEffect(() => {
               </div>
             )}
             {(!content.text && content.delay === undefined) && (
-              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             )}
           </div>
         );
@@ -227,14 +227,12 @@ useEffect(() => {
                   </div>
                 )}
               </>
-            ) : ((!content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && content.delay === undefined) && <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+            ) : ((!content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
           </div>
         );
       default:
-        // This default case will now only trigger if data.type is not recognized,
-        // and if content is empty or has no relevant data.
         return (
-          <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+          <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
         );
     }
   };

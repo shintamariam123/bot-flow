@@ -137,7 +137,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
             </div>
           ) : (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-              <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )}
         </div>
@@ -190,10 +190,10 @@ const InteractiveNode = React.memo(({ id, data }) => {
           <div style={{ position: 'absolute', right: 10, bottom: 25, fontSize: '6px', cursor: 'pointer' }}
             onClick={(e) => {
               e.stopPropagation();
-              data?.spawnConnectedNode?.(id, "list", "list");
+              data?.spawnConnectedNode?.(id, "listmessage", "listmessage");
             }}>
             List Messages
-            <Handle type="source" position={Position.Right} id="list" style={{
+            <Handle type="source" position={Position.Right} id="listmessage" style={{
               left: 'auto', right: -10, bottom: 5, width: 10,
               height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
             }} />

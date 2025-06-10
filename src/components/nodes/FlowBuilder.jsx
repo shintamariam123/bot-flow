@@ -23,7 +23,7 @@ import InteractiveNodeEditor from '../editors/InteractiveNodeEditor';
 import ButtonNode from './ButtonNode';
 import ButtonEditor from '../editors/ButtonEditor';
 import ListNode from './ListNode';
-import ListEditor from '../editors/ListEditor';
+// import ListEditor from '../editors/ListEditor';
 import EcommerceNode from './EcommerceNode';
 import EcommerceEditor from '../editors/EcommerceEditor';
 import SequenceNode from './SequenceNode';
@@ -40,6 +40,10 @@ import ProductEditor from '../editors/ProductEditor'
 import ProductSectionEditor from '../editors/ProductSectionEditor'
 import SingleProduct from './SingleProduct';
 import SingleProductEditor from '../editors/SingleProductEditor';
+import ConditionNode from './ConditionNode';
+import ConditionEditor from '../editors/ConditionEditor';
+
+
 
 
 let id = 1;
@@ -54,8 +58,7 @@ const initialNodes = [
 ];
 
 function FlowBuilder() {
-  const { screenToFlowPosition } = useReactFlow();
-  const [savedStartBotData, setSavedStartBotData] = useState(null);
+  const { screenToFlowPosition, setViewport, getViewport, fitView } = useReactFlow(); const [savedStartBotData, setSavedStartBotData] = useState(null);
   const [nodeContentMap, setNodeContentMap] = useState({});
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -77,7 +80,21 @@ function FlowBuilder() {
   const [selectedProductSectionNode, setSelectedProductSectionNode] = useState(null);
   const [selectedProductNode, setSelectedProductNode] = useState(null);
   const [selectedSingleProductNode, setSelectedSingleProductNode] = useState(null);
+  const [initialZoomApplied, setInitialZoomApplied] = useState(false);
+  const [selectedConditionNode, setSelectedConditionNode] = useState(null);
 
+
+  useEffect(() => {
+    if (!initialZoomApplied && getViewport()) { // Ensure getViewport is available
+      const timer = setTimeout(() => {
+        const viewport = getViewport();
+        setViewport({ x: viewport.x, y: viewport.y, zoom: 1 }, { duration: 0 });
+        setInitialZoomApplied(true); // Mark as applied
+      }, 50); // Small delay, adjust if needed
+
+      return () => clearTimeout(timer); // Cleanup timeout if component unmounts
+    }
+  }, [initialZoomApplied, setViewport, getViewport, nodes]); // Depend on nodes as well, as fitView depends on them
 
 
   const nodesRef = useRef(nodes); // Create a ref to hold the latest nodes state
@@ -86,26 +103,46 @@ function FlowBuilder() {
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
-  const onNodeClick = useCallback((_event, node) => {
+
+
+   const onNodeClick = useCallback((_event, node) => {
+    // Close all other editors first for a cleaner UX
+    setShowStartEditor(false);
+    setSelectedDefaultNode(null);
+    setShowInteractiveEditor(false);
+    setActiveInteractiveNodeId(null);
+    setSelectedNode(null);
+    setEditorType(null);
+    setSelectedSequenceNode(null);
+    setSelectedSendMessageNode(null);
+    setSelectedSectionNode(null);
+    setSelectedRowSectionNode(null);
+    setSelectedProductSectionNode(null);
+    setSelectedProductNode(null);
+    setSelectedSingleProductNode(null);
+    setSelectedConditionNode(null); // Close condition editor
+
 
     switch (node.type) {
       case 'defaultNode':
         setSelectedDefaultNode(node);
+        break;
+      case 'conditionNode':
+        setSelectedConditionNode(node);
         break;
       case 'buttonNode':
         setSelectedNode(node);
         setEditorType('buttonNode');
         break;
       case 'interactiveNode':
-        // Interactive nodes should set their own ID to activeInteractiveNodeId
         setActiveInteractiveNodeId(node.id);
         setShowInteractiveEditor(true);
         break;
-      case 'listNode': // Added for ListNode
+      case 'listNode':
         setSelectedNode(node);
-        setEditorType('listNode');
+        setEditorType('listNode'); // Set editor type for listNode
         break;
-      case 'ecommerceNode': // Added for EcommerceNode
+      case 'ecommerceNode':
         setSelectedNode(node);
         setEditorType('ecommerceNode');
         break;
@@ -225,7 +262,10 @@ function FlowBuilder() {
     if (selectedProductNode && selectedProductNode.id === nodeId) {
       setSelectedProductNode(null);
     }
-  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode, selectedProductSectionNode, selectedProductNode]);
+     if (selectedConditionNode && selectedConditionNode.id === nodeId) {
+      setSelectedConditionNode(null);
+    }
+  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode,selectedConditionNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode, selectedProductSectionNode, selectedProductNode]);
 
   const handleSubscribeToSequence = useCallback((buttonNodeId) => {
     const buttonNode = nodes.find(node => node.id === buttonNodeId);
@@ -258,7 +298,7 @@ function FlowBuilder() {
       target: sequenceNodeId,
       targetHandle: 'subscribe-target',
       type: 'default',
-     
+
       style: {
         zIndex: 1000, // Make sure this is higher than your node's z-index
       },
@@ -298,79 +338,111 @@ function FlowBuilder() {
     setEdges((eds) => [...eds, ...newEdges]);
   }, [nodes, setNodes, setEdges]); // Removed nodeContentMap from dependencies here
 
-  const handleSubscribeToSection = useCallback((listNodeId) => {
-    const listNode = nodes.find(node => node.id === listNodeId);
-    if (!listNode) { console.error('list node not found:', listNodeId); return; }
+  // FlowBuilder.js - relevant part of handleSubscribeToListMessage
+
+  const handleSubscribeToListMessage = useCallback((interactiveNodeId) => {
+    const interactiveNode = nodes.find(node => node.id === interactiveNodeId);
+    if (!interactiveNode) {
+      console.error('InteractiveNode not found:', interactiveNodeId);
+      return;
+    }
+
     const newNodes = [];
     const newEdges = [];
-    const sectionNodeId = getId(); // This generates 'node_9'
+
+    // 1. Create ListNode
+    const listNodeId = getId();
+    const listNodePosition = {
+      x: interactiveNode.position.x + 300,
+      y: interactiveNode.position.y,
+    };
+    const listNode = {
+      id: listNodeId,
+      type: 'listNode',
+      position: listNodePosition,
+      data: {
+        label: 'New List Message',
+        content: {},
+        onRemoveNode: onRemoveNode,
+      },
+    };
+    newNodes.push(listNode);
+
+    // Connect InteractiveNode 'listmessage' to ListNode 'list-target'
+    newEdges.push({
+      id: `e-${interactiveNodeId}-${listNodeId}-interactive-listmessage`,
+      source: interactiveNodeId,
+      sourceHandle: 'listmessage', // Matches InteractiveNode's source handle ID
+      target: listNodeId,
+      targetHandle: 'list-target', // Matches ListNode's target handle ID
+      type: 'default',
+    });
+
+    // 2. Create SectionNode
+    const sectionNodeId = getId();
     const sectionNodePosition = {
-      x: listNode.position.x + 300,
-      y: listNode.position.y + 50,
+      x: listNodePosition.x + 300,
+      y: listNodePosition.y,
     };
     const sectionNode = {
       id: sectionNodeId,
       type: 'sectionNode',
       position: sectionNodePosition,
       data: {
-        label: `New section from list`,
+        label: 'New Section',
         content: {},
-        style: {
-          zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+        onRemoveNode: onRemoveNode,
+        onEditSectionNode: (nodeId) => {
+          setSelectedSectionNode(nodesRef.current.find(n => n.id === nodeId));
         },
       },
     };
     newNodes.push(sectionNode);
 
+    // Connect ListNode 'section' handle to SectionNode 'section-target'
     newEdges.push({
-      id: `e-<span class="math-inline">\{listNodeId\}\-</span>{sectionNodeId}-list-subscribe`,
+      id: `e-${listNodeId}-${sectionNodeId}-list-section`,
       source: listNodeId,
-      sourceHandle: 'section',
+      sourceHandle: 'section', // Matches ListNode's source handle ID
       target: sectionNodeId,
-      targetHandle: 'section-target',
+      targetHandle: 'section-target', // Matches SectionNode's target handle ID
       type: 'default',
-
     });
 
+    // 3. Create three RowSectionNodes
     for (let i = 0; i < 3; i++) {
       const rowNodeId = getId();
       const rowNodePosition = {
         x: sectionNodePosition.x + 300,
         y: sectionNodePosition.y + (i * 180) - 50,
       };
-      const rowSectionNode = {
+      const rowNode = {
         id: rowNodeId,
         type: 'rowSectionNode',
         position: rowNodePosition,
         data: {
           label: `Row ${i + 1}`,
           content: {},
-          style: {
-            zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
-          },
+          onRemoveNode: onRemoveNode,
+          onEditRowSectionNode: (nodeId) => setSelectedRowSectionNode(nodes.find(n => n.id === nodeId)),
         },
       };
-      newNodes.push(rowSectionNode);
+      newNodes.push(rowNode);
+
+      // Connect SectionNode 'row' handle to RowSectionNode 'row-target'
       newEdges.push({
-        id: `e-<span class="math-inline">\{sectionNodeId\}\-row\-msg\-</span>{rowNodeId}-row-target-${i}`,
+        id: `e-${sectionNodeId}-${rowNodeId}-section-row-${i}`,
         source: sectionNodeId,
-        sourceHandle: 'row-msg',
+        sourceHandle: 'row', // Matches SectionNode's source handle ID
         target: rowNodeId,
-        targetHandle: 'row-target',
+        targetHandle: 'row-target', // Matches RowSectionNode's target handle ID
         type: 'default',
-      
       });
     }
 
-    console.log('handleSubscribeToSection: New nodes to add:', newNodes); // ADD THIS
-    setNodes((nds) => {
-      const updatedNodes = [...nds, ...newNodes];
-      console.log('handleSubscribeToSection: Nodes after setNodes:', updatedNodes); // ADD THIS
-      return updatedNodes;
-    });
+    setNodes((nds) => [...nds, ...newNodes]);
     setEdges((eds) => [...eds, ...newEdges]);
-  }, [nodes, setNodes, setEdges]); // Ensure `nodes` is a dependency here.
-  // FlowBuilder.js (Excerpt from spawnConnectedNode)
+  }, [nodes, setNodes, setEdges, onRemoveNode]);
 
   const handleSubscribeToProductSection = useCallback((ecommerceNodeId) => {
     const ecommerceNode = nodes.find(node => node.id === ecommerceNodeId);
@@ -389,9 +461,9 @@ function FlowBuilder() {
       data: {
         label: `New product section from ecommerce`,
         content: {},
-        content: {},
+
         style: {
-          zIndex: 10, // <--- Apply zIndex here, a lower value than your edge zIndex
+          zIndex: 10,
         },
       },
     };
@@ -404,7 +476,7 @@ function FlowBuilder() {
       target: productSectionNodeId,
       targetHandle: 'productSection-target',
       type: 'default',
-     
+
     });
 
     for (let i = 0; i < 3; i++) {
@@ -433,7 +505,7 @@ function FlowBuilder() {
         target: productNodeId,
         targetHandle: 'product-target',
         type: 'default',
-      
+
       });
     }
 
@@ -479,7 +551,7 @@ function FlowBuilder() {
       target: singleProductNodeId,
       targetHandle: 'singleProduct-target',
       type: 'default',
-     
+
     });
 
     console.log('handleSubscribeToproductSection: New nodes to add:', newNodes); // ADD THIS
@@ -499,6 +571,7 @@ function FlowBuilder() {
       list: 'listNode',
       ecommerce: 'ecommerceNode',
       reply: 'defaultNode',
+    
 
     };
 
@@ -519,7 +592,12 @@ function FlowBuilder() {
     } else {
       newPosition = { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 };
     }
-
+    // --- NEW LOGIC FOR LIST MESSAGE FLOW ---
+    if (sourceHandle === 'listmessage') {
+      handleSubscribeToListMessage(sourceNodeId);
+      return; // Exit as the nodes and edges are handled by handleSubscribeToListMessage
+    }
+    // --- END NEW LOGIC ---
     const newNode = {
       id: newNodeId,
       type: nodeTypeMap[type] || 'defaultNode', // Fallback to defaultNode if type not found
@@ -535,13 +613,12 @@ function FlowBuilder() {
           setShowInteractiveEditor(true);
         },
         onCloseInteractiveEditor: () => setShowInteractiveEditor(false),
-        onEditListNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('listNode'); },
         onEditEcommerceNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('ecommerceNode'); },
         onEditButtonNode: (id) => { setSelectedNode(nodes.find(n => n.id === id)); setEditorType('buttonNode'); },
         onSubscribeToSequence: handleSubscribeToSequence, // Ensure this is passed to ButtonNode if needed
-        onSubscribeToSection: handleSubscribeToSection,
         onSubscribeToProductSection: handleSubscribeToProductSection,
-        onSubscribeToSingleProduct: handleSubscribeToSingleProduct
+        onSubscribeToSingleProduct: handleSubscribeToSingleProduct,
+     onEditConditionNode: (id) => setSelectedConditionNode(nodes.find(n => n.id === id)), // Pass editor function for condition
       },
     };
 
@@ -556,7 +633,7 @@ function FlowBuilder() {
 
     setNodes((nds) => [...nds, newNode]);
     setEdges((eds) => [...eds, newEdge]);
-  }, [setNodes, setEdges, nodes, onRemoveNode, handleSubscribeToSequence, handleSubscribeToSection, handleSubscribeToProductSection]); // Keep dependencies up to date
+  }, [setNodes, setEdges, nodes, onRemoveNode, handleSubscribeToSequence, handleSubscribeToProductSection]); // Keep dependencies up to date
 
   const handleSaveSequenceContent = useCallback((content) => {
     if (!selectedSequenceNode) return;
@@ -570,6 +647,23 @@ function FlowBuilder() {
     setSelectedSendMessageNode(null);
   }, [selectedSendMessageNode, handleSaveNodeContent]);
 
+  const handleSaveConditionContent = useCallback((nodeId, newContent) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          // Return a new node object with updated data.content
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: newContent, // <--- UPDATE THE CONTENT HERE
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [setNodes]);
   const handleSaveSectionContent = useCallback((nodeId, newContent) => {
     setNodes((nds) =>
       nds.map((node) => {
@@ -742,8 +836,8 @@ function FlowBuilder() {
           type: nodeType,
           position,
           data: {
-            type: contentType, // This should be the 'Text', 'Image', etc. from toolbar
-            content: {}, // Always initialize content as an empty object for new nodes
+            type: contentType,
+            content: {},
             onRemoveNode: onRemoveNode,
             onCloseEditor: closeDefaultNodeEditor,
             onEditInteractiveNode: () => {
@@ -752,6 +846,8 @@ function FlowBuilder() {
             },
             onCloseInteractiveEditor: () => setShowInteractiveEditor(false), // A more specific close handler
             spawnConnectedNode: spawnConnectedNode,
+            onEditConditionNode: (id) => setSelectedConditionNode(nodesRef.current.find(n => n.id === id)), // Pass this for new ConditionNodes from drag and drop
+            onCloseConditionEditor: () => setSelectedConditionNode(null), // Pass this for new ConditionNodes from drag and drop
           },
         };
         setNodes((nds) => nds.concat(newNode));
@@ -786,7 +882,17 @@ function FlowBuilder() {
     buttonNode: ButtonNode,
     listNode: ListNode,
     ecommerceNode: EcommerceNode,
-
+ conditionNode: (nodeProps) => (
+      <ConditionNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditConditionNode={() => {
+         
+          setSelectedConditionNode(nodeProps);
+        }}
+        onCloseConditionEditor={() => setSelectedConditionNode(null)}
+       />
+    ),
     sequenceNode: (nodeProps) => (
       <SequenceNode
         {...nodeProps}
@@ -909,11 +1015,7 @@ function FlowBuilder() {
             data: {
               ...node.data,
               onRemoveNode: onRemoveNode,
-              onEditListNode: (id) => {
-                setSelectedNode(nodes.find(n => n.id === id));
-                setEditorType('listNode');
-              },
-              onSubscribeToSection: handleSubscribeToSection
+
             },
           };
         } else if (node.type === 'ecommerceNode') {
@@ -951,7 +1053,24 @@ function FlowBuilder() {
               onEditSendMessageNode: (nodeId) => setSelectedSendMessageNode(nodes.find(n => n.id === nodeId)),
             },
           };
-        } else if (node.type === 'sectionNode') { // **Updated useEffect for SectionNode**
+        }else if (node.type === 'conditionNode') { // **Updated useEffect for SectionNode**
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              onRemoveNode: onRemoveNode,
+              onEditConditionNode: (nodeId) => {
+                console.log('FlowBuilder useEffect: received nodeId for editor:', nodeId); // ADD THIS
+                const nodeToEdit = nodesRef.current.find(n => n.id === nodeId);
+                console.log('FlowBuilder useEffect: Attempting to open editor for node:', nodeToEdit);
+                setSelectedConditionNode(nodeToEdit);
+              },
+            },
+          };
+        }
+        
+        
+        else if (node.type === 'sectionNode') { // **Updated useEffect for SectionNode**
           return {
             ...node,
             data: {
@@ -1014,7 +1133,7 @@ function FlowBuilder() {
         }
         return node;
       }));
-  }, [setNodes, onRemoveNode, spawnConnectedNode, handleSubscribeToSequence, handleSubscribeToSection, handleSubscribeToProductSection, handleSubscribeToSingleProduct]);
+  }, [setNodes, onRemoveNode, spawnConnectedNode, handleSubscribeToSequence, handleSubscribeToProductSection, handleSubscribeToSingleProduct]);
 
   return (
     <div style={{ width: '100vw', height: '100vh' }}>
@@ -1038,9 +1157,12 @@ function FlowBuilder() {
             markerEnd: {
               type: MarkerType.ArrowClosed,
               color: 'black',
+              width: 15,
+              height: 15,
             },
-            style: { // <--- Add style here
-              zIndex: 1000, // A high value to ensure visibility
+            style: {
+              strokeWidth: 2, // <--- ADD THIS LINE FOR THICKNESS
+              zIndex: 1000,
             },
           }}
           onNodesChange={onNodesChange}
@@ -1050,10 +1172,10 @@ function FlowBuilder() {
           onDragOver={onDragOver}
           onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
-          fitView
+        // fitView
         >
-          <MiniMap />
-          <Controls />
+          {/* <MiniMap /> */}
+          {/* <Controls /> */}
           <Background />
         </ReactFlow>
       </div>
@@ -1072,7 +1194,6 @@ function FlowBuilder() {
         onSave={handleSaveDefaultNodeContent}
       />
 
-      {/* InteractiveNodeEditor should fetch content from the node's data.content directly */}
       <InteractiveNodeEditor
         show={showInteractiveEditor}
         onClose={() => {
@@ -1081,8 +1202,17 @@ function FlowBuilder() {
         }}
         nodeId={activeInteractiveNodeId}
         content={nodes.find(n => n.id === activeInteractiveNodeId)?.data?.content || {}}
-        onSave={handleSaveNodeContent} // Use the unified handler
+        onSave={handleSaveNodeContent}
       />
+
+        {selectedConditionNode && (
+        <ConditionEditor
+        node={selectedConditionNode}
+          content={selectedConditionNode.data?.content || {}} // Access content directly from selectedConditionNode
+          onSave={handleSaveConditionContent}
+          onClose={() => setSelectedConditionNode(null)}
+        />
+      )}
       {selectedSequenceNode && (
         <SequenceEditor
           node={selectedSequenceNode}
@@ -1159,17 +1289,7 @@ function FlowBuilder() {
             setEditorType(null);
           }} />
       )}
-      {editorType === 'listNode' && selectedNode && (
-        <ListEditor
-          show={true}
-          nodeId={selectedNode?.id}
-          content={nodes.find(n => n.id === selectedNode.id)?.data?.content || {}}
-          onSave={handleSaveNodeContent} // Use the unified handler
-          onClose={() => {
-            setSelectedNode(null);
-            setEditorType(null);
-          }} />
-      )}
+
       {editorType === 'ecommerceNode' && selectedNode && (
         <EcommerceEditor
           show={true}

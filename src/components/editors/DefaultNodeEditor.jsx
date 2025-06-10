@@ -11,7 +11,8 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
   // Text node states
   const [messageType, setMessageType] = useState('Custom');
   const [text, setText] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showCustomDropdown, setShowCustomDropdown] = useState(false); // State for custom fields dropdown
+  const [isTextReadOnly, setIsTextReadOnly] = useState(false); // New state for readOnly input
 
   // Image node state
   const [imagePreview, setImagePreview] = useState(null);
@@ -38,15 +39,11 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
   // Shared delay
   const [delay, setDelay] = useState(0);
 
-  // Load existing data when editing again
-  // Now, content will come directly from node.data.content
   useEffect(() => {
     if (!node?.id) return;
 
     // Access content directly from node.data.content
     const content = node.data.content;
-    // console.log('DefaultNodeEditor: Loading content for node', node.id, content); // Debugging
-
     if (!content) {
       // Reset states if no content is found for the node
       setMessageType('Custom');
@@ -62,6 +59,7 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
       setField3('');
       setField4('');
       setDelay(0);
+      setIsTextReadOnly(false);
       return;
     }
 
@@ -70,6 +68,8 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
       setMessageType(content.messageType || 'Custom');
       setText(content.text || '');
       setDelay(content.delay || 0);
+      const systemFullName = optionsData.system_fields_list[0]?.full_name || '';
+      setIsTextReadOnly(content.text === systemFullName);
     } else if (content.type === 'Image') {
       setImagePreview(content.image || null);
       setDelay(content.delay || 0);
@@ -95,17 +95,25 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
     }
   }, [node]); // Dependency only on 'node'
 
-  // Handle inserting variables into text
-  const handleInsertVariable = (variable) => {
-    setText((prev) => `${prev} {{${variable}}}`);
+   const handleCustomDropdownSelect = (selectedOption) => {
+    const systemFullName = optionsData.system_fields_list[0]?.full_name || '';
+    if (text === systemFullName) {
+      setText(selectedOption);
+    } else {
+      setText((prev) => `${prev}${prev ? ' ' : ''}${selectedOption}`); // Add space if text already exists
+    }
+    setMessageType('Custom'); // Keep messageType as 'Custom' or relevant
+    setShowCustomDropdown(false);
+    setIsTextReadOnly(false); // Make editable after selecting a custom field
   };
 
-  const handleDropdownSelect = (selectedOption) => {
-    setText((prev) => `${prev} ${selectedOption}`); // Append selected option to text
-    setMessageType(selectedOption); // Update messageType to the selected variable for display
-    setShowDropdown(false);
+  const handleNameButtonClick = () => {
+    const systemFullName = optionsData.system_fields_list[0]?.full_name || ''; // Assuming first system field for name
+    setText(systemFullName);
+    setMessageType('Name');
+    setShowCustomDropdown(false); // Close custom dropdown if open
+    setIsTextReadOnly(true); // Name field is read-only
   };
-
 
   const handleImageUpload = async (file) => {
     if (!file) return;
@@ -224,12 +232,12 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
               <button
                 type="button"
                 className="btn btn-outline-secondary"
-                onClick={() => setShowDropdown(!showDropdown)}
+                onClick={() => setShowCustomDropdown(!showCustomDropdown)}
               >
                 <FaCog style={{ marginRight: 5 }} />
-                {messageType}
+               Custom
               </button>
-              {showDropdown && (
+              {showCustomDropdown && (
                 <ul style={{
                   position: 'absolute',
                   top: '100%',
@@ -242,10 +250,10 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
                   width: '150px',
                   zIndex: 1000
                 }}>
-                  {optionsData.default_node_editor_variable_options.map((option) => ( // Assuming this path
+                  {optionsData.custom_fields_list.map((option) => ( // Assuming this path
                     <li
-                      key={option.name}
-                      onClick={() => handleDropdownSelect(option.value)}
+                      key={option.id}
+                      onClick={() => handleCustomDropdownSelect(option.name)}
                       style={{
                         padding: '8px 12px',
                         cursor: 'pointer',
@@ -263,12 +271,7 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
               type="button"
               className="btn btn-outline-secondary"
               title="Insert name variable"
-              onClick={() => {
-                handleInsertVariable('name');
-                setMessageType('Name');
-              }}
-
-            >
+             onClick={handleNameButtonClick}   >
               <FaUser style={{ marginRight: 5 }} />
               Name
             </button>
@@ -280,6 +283,7 @@ const DefaultNodeEditor = ({ node, onClose, onSave }) => { // Removed nodeConten
             placeholder="Type your reply..."
             value={text}
             onChange={(e) => setText(e.target.value)}
+             readOnly={isTextReadOnly}
           />
 
           <p className="mt-2 mb-1">🕒 Delay in Reply: <strong>{delay} seconds</strong></p>

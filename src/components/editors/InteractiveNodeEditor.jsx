@@ -7,15 +7,17 @@ import data from './js-data/optionsData.json';
 
 const InteractiveNodeEditor = ({ show, onClose, nodeId, content, onSave }) => {
     const [selectedTab, setSelectedTab] = useState('text'); // 'text' or 'media'
+   
     const [messageType, setMessageType] = useState('Custom'); // Custom or Name
     const [dropdownValue, setDropdownValue] = useState('');
-    const [text, setText] = useState('');
     const [dropText, setDropText] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+
+    const [text, setText] = useState('');
 
     const [mediaUrl, setMediaUrl] = useState('');
     const [footer, setFooter] = useState('');
     const [delay, setDelay] = useState(0);
-    const [showDropdown, setShowDropdown] = useState(false);
 
     useEffect(() => {
 
@@ -154,15 +156,8 @@ const InteractiveNodeEditor = ({ show, onClose, nodeId, content, onSave }) => {
                         Name                    </Button>
                 </ButtonGroup>
 
-
-                {/* Dropdown Options */}
-                {/* Dropdown & Dynamic Input */}
                 <div className="mb-3 position-relative">
-                    {/* <Button variant="outline-secondary" onClick={() => setShowDropdown(!showDropdown)}>
-                        <FaCog className="me-2" />
-                        {dropdownValue || 'Select Field'}
-                    </Button> */}
-
+                  
                     {showDropdown && (
                         <ul
                             className="position-absolute bg-white border list-unstyled p-0  w-100"
