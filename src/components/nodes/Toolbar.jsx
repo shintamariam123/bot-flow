@@ -13,9 +13,7 @@ const nodeTypes = [
   { type: 'Location', icon: 'mingcute:location-line', color: 'purple' },
   { type: 'Whatsapp', icon: 'fluent:flowchart-16-filled', color: 'greenyellow' },
   { type: 'Interactive', icon: 'material-symbols:interactive-space', color: 'red' },
-
-
-  { type: 'Logic', icon: 'ic:baseline-greater-than-equal', color: 'blue' },
+  { type: 'Condition', icon: 'ic:baseline-greater-than-equal', color: 'blue' },
   { type: 'Sequence', icon: 'ri:message-2-line', color: 'black' },
   { type: 'StackOverflow', icon: 'devicon:stackoverflow', color: 'brown' },
   { type: 'Template', icon: 'vscode-icons:folder-type-template-opened', color: 'orange' },
@@ -119,6 +117,8 @@ const Toolbar = ({
       nodeType = 'sendMessageAfterNode';
     } else if (['Button', 'List', 'eCommerce'].includes(type)) {
       nodeType = type.toLowerCase() + 'Node';
+    } else if (type === 'Condition') {
+      nodeType = 'conditionNode';
     } else {
       nodeType = 'defaultNode'; // Default only if no other type matches
     }

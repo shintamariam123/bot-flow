@@ -97,7 +97,7 @@ const SectionNode = React.memo(({ data, id, onRemoveNode, onEditSectionNode }) =
                         </div>
                     ) : (
                         <div onClick={handleThumbIconClick}>
-                            <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                            <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
                         </div>
                     )}
 
@@ -143,7 +143,7 @@ const SectionNode = React.memo(({ data, id, onRemoveNode, onEditSectionNode }) =
                     <Handle
                         type="source"
                         position={Position.Right}
-                        id="row-msg"
+                        id="row"
                         style={{
                             left: 'auto', right: -10, bottom: 5, width: 10,
                             height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'

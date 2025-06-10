@@ -97,7 +97,7 @@ const ProductSection = React.memo(({ data, id, onRemoveNode, onEditProductSectio
                     </div>
                 ) : (
                     <div onClick={handleThumbIconClick}>
-                        <Icon icon="mdi:thumb-up" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
                     </div>
                 )}
 

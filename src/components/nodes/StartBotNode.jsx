@@ -2,11 +2,16 @@ import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-const StartBotNode = React.memo(({ data }) => {
-    const handleThumbClick = (e) => {
+const StartBotNode = React.memo(({ data}) => {
+    const handleCursorIconClick = (e) => {
+        // Stop propagation to prevent any parent click handlers from firing
         e.stopPropagation();
+        console.log("Cursor icon clicked in StartBotNode!"); // Add a console log
         if (typeof data?.openEditor === 'function') {
+            console.log("Calling data.openEditor()"); // Add another console log
             data.openEditor();
+        } else {
+            console.log("data.openEditor is not a function or is null/undefined.", data);
         }
     };
     const savedData = data.savedData;
@@ -40,23 +45,29 @@ const StartBotNode = React.memo(({ data }) => {
                         <p><strong>Assign To:</strong> {savedData.assignTo}</p>
                         <p><strong>Webhook:</strong> {savedData.webhookURL}</p>
                     </div>
-                ) :
-                    (
-                        <div>
-                            <Icon icon="mdi:thumb-up" width="20" height="20" color='black' onClick={handleThumbClick} style={{ cursor: 'pointer' }} />
-                        </div>
-                    )}
+                ) : (
+                    <div>
+                        {/* Ensure this is the ONLY element with an onClick handler that opens the editor */}
+                        <Icon
+                            icon="mdi:cursor-pointer"
+                            width="20"
+                            height="20"
+                            color='black'
+                            onClick={handleCursorIconClick} // Renamed for clarity
+                            style={{ cursor: 'pointer' }}
+                        />
+                    </div>
+                )}
             </div>
             <div className="dotted-line mt-1" />
             <div className='px-2 footer mt-2 d-flex align-self-end'>
-                {/* <p>Message</p> */}
                 <p className='ms-auto'>Compose Next Message</p>
             </div>
             <Handle type="source" position={Position.Bottom} style={{
                 left: 'auto', right: -10, bottom: 20,
                 width: 10,
                 height: 10,
-                borderRadius: '50%',  // Circle
+                borderRadius: '50%',
                 background: 'white',
                 border: '1px solid grey'
             }} />

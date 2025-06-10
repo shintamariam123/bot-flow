@@ -19,7 +19,7 @@
     "system_fields_list": [
         {
             "id": 1,
-            "full_name": "#first_name last_name#"
+            "full_name": "#first_name#"
         }
     ],
     "group_label_list": [
