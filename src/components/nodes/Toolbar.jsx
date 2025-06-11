@@ -131,8 +131,8 @@ const Toolbar = ({
 
 
   return (
-    <div className="button-div">
-      <div className="btn-box">
+    <div className="button-div row">
+      <div className="btn-box col-md-10">
         {nodeTypes.map(({ type, icon, color }) => (
           <button
             key={type}
@@ -146,7 +146,7 @@ const Toolbar = ({
         ))}
       </div>
 
-      <div>
+      <div className='col-md-2'>
         <button
           onClick={handleSave}
           className="btn save-btn"
@@ -154,7 +154,8 @@ const Toolbar = ({
         >
           {isSaving ? 'Saving...' : 'Save'}
         </button>
-        <button className='btn save-dash ms-2' onClick={onDashboardClick}>Dashboard</button>      </div>
+        <button className='btn save-dash ms-2' onClick={onDashboardClick}>Dashboard</button>
+      </div>
 
       <ToastContainer position="top-right" autoClose={3000} />
     </div>

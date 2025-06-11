@@ -22,9 +22,6 @@
 }
 
 .button-div {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between !important;
   padding: 30px !important;
   background-color: #fff;
 }

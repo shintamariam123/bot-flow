@@ -122,23 +122,7 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
 
             <div className="dotted-line mt-3 " />
 
-            {/* <div className="px-2 footer mt-2 d-flex align-self-end">
-                <p style={{ fontSize: '6px' }}>Setup New <br /> Sequence</p>
-            </div> */}
-
-            {/* Target Handle: Setup New Sequence */}
-            {/* <Handle
-                type="target"
-                position={Position.Bottom}
-                id="subscribe-target"
-                style={{
-                   left: 0, bottom: 20, width: 10,
-                    height: 10,
-                    borderRadius: '50%',  // Circle
-                    background: 'white',
-                    border: '1px solid grey'
-                }}
-            /> */}
+          
 
              <div className='container mt-5'>
                 <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>

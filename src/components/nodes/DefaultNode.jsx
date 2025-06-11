@@ -2,14 +2,14 @@ import React, { useState, memo, useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
-const DefaultNode = memo(({ id, data, onRemoveNode }) => {
+const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
   const content = data.content;
-   const updateNodeInternals = useUpdateNodeInternals();
-  
-  // console.log(content);
-useEffect(() => {
-        updateNodeInternals(id); // <--- Call this with the node's ID
-    }, [updateNodeInternals, id]);
+  const updateNodeInternals = useUpdateNodeInternals();
+
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [updateNodeInternals, id]);
+
   const iconMap = {
     Text: "ic:baseline-textsms",
     Image: "mdi:image-outline",
@@ -19,6 +19,7 @@ useEffect(() => {
     Location: "tabler:location",
     Whatsapp: "fluent:flowchart-20-regular"
   };
+
   const [showClose, setShowClose] = useState(false);
 
   const handleContextMenu = (e) => {
@@ -27,28 +28,46 @@ useEffect(() => {
     console.log(`DefaultNode ${id}: Right-clicked to show close icon.`);
   };
 
-  const handleClick = () => {
-    if (showClose) setShowClose(false);
+  const handleNodeClick = () => { 
+    if (showClose) {
+      setShowClose(false);
+    }
+  };
+
+  const handleCursorIconClick = (e) => {
+    e.stopPropagation(); 
+    if (onEditDefaultNode) {
+      console.log(`DefaultNode ${id}: Cursor icon clicked. Calling onEditDefaultNode.`);
+      onEditDefaultNode(id); 
+    }
   };
 
   const renderContent = () => {
-    // Check if content exists AND if it has any meaningful data for the specific type
-    // This handles cases where 'content' object might be empty or specific fields are missing
-    if (!content || Object.keys(content).length === 0 ||
-      (data.type === 'Text' && !content.text && !content.delay) ||
-      (data.type === 'Image' && !content.image && !content.delay) ||
-      (data.type === 'Video' && !content.video && !content.delay) ||
-      (data.type === 'Audio' && !content.audio && !content.delay) ||
-      (data.type === 'File' && (!content.file || (!content.file.url && !content.file.type)) && !content.delay) ||
-      (data.type === 'Location' && !content.text && !content.delay) ||
-      (data.type === 'Whatsapp' && !content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && !content.delay)
-    ) {
+    const shouldShowCursorIcon =
+      !content || Object.keys(content).length === 0 ||
+      (data.type === 'Text' && !content.text && content.delay === undefined) ||
+      (data.type === 'Image' && !content.image && content.delay === undefined) ||
+      (data.type === 'Video' && !content.video && content.delay === undefined) ||
+      (data.type === 'Audio' && !content.audio && content.delay === undefined) ||
+      (data.type === 'File' && (!content.file || (!content.file.url && !content.file.type)) && content.delay === undefined) ||
+      (data.type === 'Location' && !content.text && content.delay === undefined) ||
+      (data.type === 'Whatsapp' && !content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && content.delay === undefined);
+
+    if (shouldShowCursorIcon) {
       return (
-        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+        // Add onClick directly to the Icon when it's rendered
+        <Icon
+          icon="mdi:cursor-pointer"
+          width="20"
+          height="20"
+          color='black'
+          style={{ cursor: 'pointer' }}
+          onClick={handleCursorIconClick} // <-- This is the crucial change
+        />
       );
     }
 
-    // If content exists and has data, proceed with the switch case
+    // If content exists, proceed with the switch case to render actual content
     switch (data.type) {
       case 'Text':
         return (
@@ -63,9 +82,7 @@ useEffect(() => {
                 <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span> </p>
               </div>
             )}
-            {(!content.text && content.delay === undefined) && (
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
-            )}
+           
           </div>
         );
       case 'Image':
@@ -78,9 +95,9 @@ useEffect(() => {
             )}
             {content.image ?
               <div className='reply-box mt-1 w-fit-content'>
-
                 <img src={content.image} alt="node-img" /></div> :
-              ((!content.image && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+              null
+            }
           </div>
         );
       case 'Video':
@@ -98,7 +115,7 @@ useEffect(() => {
                   Your browser does not support the video element.
                 </video>
               </div>
-            ) : ((!content.video && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+            ) : null}
           </div>
         );
       case 'Audio':
@@ -116,7 +133,7 @@ useEffect(() => {
                   Your browser does not support the audio element.
                 </audio>
               </div>
-            ) : ((!content.audio && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+            ) : null}
           </div>
         );
       case 'File':
@@ -172,7 +189,7 @@ useEffect(() => {
             );
           }
         }
-        return <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />; // Fallback for file with no URL/type or content.delay === undefined
+        return null; // The icon is now handled by shouldShowCursorIcon
       case 'Location':
         return (
           <div className='p-1 d-flex flex-column align-items-center w-100'>
@@ -186,9 +203,7 @@ useEffect(() => {
                 <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span> </p>
               </div>
             )}
-            {(!content.text && content.delay === undefined) && (
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
-            )}
+            {/* Redundant icon rendering here */}
           </div>
         );
       case 'Whatsapp':
@@ -227,13 +242,11 @@ useEffect(() => {
                   </div>
                 )}
               </>
-            ) : ((!content.flowType && !content.field1 && !content.field2 && !content.field3 && !content.field4 && content.delay === undefined) && <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />)}
+            ) : null}
           </div>
         );
       default:
-        return (
-          <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
-        );
+        return null; // The icon is now handled by shouldShowCursorIcon
     }
   };
 
@@ -242,21 +255,21 @@ useEffect(() => {
       className={`content ${showClose ? 'node-highlighted' : ''}`}
       style={{ width: '100%', position: 'relative' }}
       onContextMenu={handleContextMenu}
-      onClick={handleClick}
+      onClick={handleNodeClick} // Node click for general node behavior (e.g., hiding close button)
     >
       {showClose && (
         <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
-             console.log(`DefaultNode ${id}: Close icon clicked.`);
+            console.log(`DefaultNode ${id}: Close icon clicked.`);
             if (onRemoveNode && id) {
               console.log(`DefaultNode ${id}: Calling onRemoveNode with ID: ${id}`);
               onRemoveNode(id);
               if (data.onCloseEditor) {
-                 console.log(`DefaultNode ${id}: Calling onCloseEditor.`);
+                console.log(`DefaultNode ${id}: Calling onCloseEditor.`);
                 data.onCloseEditor();
               }
-            }else{
+            } else {
               console.log(`DefaultNode ${id}: onRemoveNode or ID is missing. onRemoveNode: ${!!onRemoveNode}, id: ${id}`);
             }
             setShowClose(false);
@@ -310,62 +323,34 @@ useEffect(() => {
       </div>
 
       <div className="dotted-line mt-2" />
-      {/* <div className="px-2 footer mt-2 d-flex align-self-end">
-        <p>Message</p>
-        <p className="ms-auto">Compose Next Message</p>
-      </div> */}
-     <div className='container mt-5'>
-                    <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>
-                         Message
-                        <Handle
-                            type="target"
-                            position={Position.Left}
-                          id='input'
-                            style={{
-                                left: 0, bottom: 0, width: 10,
-                                height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-                            }}
-                        />
-                    </div>
-    
-                {/* Source Handle: Schedule Sequence Message */}
-                    <div style={{ position: 'absolute', right: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingRight: '15px' }}>
-                       Compose Next Message
-                        <Handle
-                            type="source"
-                            position={Position.Right}
-                           
-                            style={{
-                                right: 0, bottom: 0, width: 10,
-                                height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
-                            }}
-                        />
-                    </div>
-                </div>
-    
-    
-      {/* <Handle
-        type="target"  id="input" 
-        position={Position.Bottom}
-        style={{
-          right: 'auto', left: 0, bottom: 20, width: 10,
-          height: 10,
-          borderRadius: '50%',
-          background: 'white',
-          border: '1px solid black'
-        }}
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{
-          left: 'auto', right: -10, bottom: 20, width: 10,
-          height: 10,
-          borderRadius: '50%',
-          background: 'white',
-          border: '1px solid black'
-        }}
-      /> */}
+
+      <div className='container mt-5'>
+        <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+          Message
+          <Handle
+            type="target"
+            position={Position.Left}
+            id='input'
+            style={{
+              left: 0, bottom: 0, width: 10,
+              height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+            }}
+          />
+        </div>
+
+        {/* Source Handle: Schedule Sequence Message */}
+        <div style={{ position: 'absolute', right: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingRight: '15px' }}>
+          Compose Next Message
+          <Handle
+            type="source"
+            position={Position.Right}
+            style={{
+              right: 0, bottom: 0, width: 10,
+              height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 });

@@ -1,15 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect, useMemo } from 'react';
-
-import {
-  ReactFlow,
-  MiniMap,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  addEdge, MarkerType,
-  useReactFlow
-} from '@xyflow/react';
+import { ReactFlow, MiniMap, Controls, Background, useNodesState, useEdgesState, addEdge, MarkerType,useReactFlow } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import StartBotNode from './StartBotNode';
@@ -23,7 +13,6 @@ import InteractiveNodeEditor from '../editors/InteractiveNodeEditor';
 import ButtonNode from './ButtonNode';
 import ButtonEditor from '../editors/ButtonEditor';
 import ListNode from './ListNode';
-// import ListEditor from '../editors/ListEditor';
 import EcommerceNode from './EcommerceNode';
 import EcommerceEditor from '../editors/EcommerceEditor';
 import SequenceNode from './SequenceNode';
@@ -42,9 +31,8 @@ import SingleProduct from './SingleProduct';
 import SingleProductEditor from '../editors/SingleProductEditor';
 import ConditionNode from './ConditionNode';
 import ConditionEditor from '../editors/ConditionEditor';
-
-
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 let id = 1;
 const getId = () => `node_${id++}`;
@@ -52,7 +40,7 @@ const initialNodes = [
   {
     id: 'start',
     type: 'startBot',
-    data: {},
+    data: {connected: false},
     position: { x: 250, y: 50 },
   },
 ];
@@ -64,49 +52,37 @@ function FlowBuilder() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [showStartEditor, setShowStartEditor] = useState(false);
   const [selectedDefaultNode, setSelectedDefaultNode] = useState(null);
-  // interactive editor
   const [showInteractiveEditor, setShowInteractiveEditor] = useState(false);
   const [activeInteractiveNodeId, setActiveInteractiveNodeId] = useState(null);
-
   const [selectedNode, setSelectedNode] = useState(null); // Used for Button, List, Ecommerce
   const [editorType, setEditorType] = useState(null);
-
   const [selectedSequenceNode, setSelectedSequenceNode] = useState(null);
   const [selectedSendMessageNode, setSelectedSendMessageNode] = useState(null);
-
   const [selectedSectionNode, setSelectedSectionNode] = useState(null);
   const [selectedRowSectionNode, setSelectedRowSectionNode] = useState(null);
-
   const [selectedProductSectionNode, setSelectedProductSectionNode] = useState(null);
   const [selectedProductNode, setSelectedProductNode] = useState(null);
   const [selectedSingleProductNode, setSelectedSingleProductNode] = useState(null);
   const [initialZoomApplied, setInitialZoomApplied] = useState(false);
   const [selectedConditionNode, setSelectedConditionNode] = useState(null);
 
-
   useEffect(() => {
-    if (!initialZoomApplied && getViewport()) { // Ensure getViewport is available
+    if (!initialZoomApplied && getViewport()) {
       const timer = setTimeout(() => {
         const viewport = getViewport();
         setViewport({ x: viewport.x, y: viewport.y, zoom: 1 }, { duration: 0 });
-        setInitialZoomApplied(true); // Mark as applied
-      }, 50); // Small delay, adjust if needed
-
-      return () => clearTimeout(timer); // Cleanup timeout if component unmounts
+        setInitialZoomApplied(true); 
+      }, 50);
+      return () => clearTimeout(timer); 
     }
-  }, [initialZoomApplied, setViewport, getViewport, nodes]); // Depend on nodes as well, as fitView depends on them
+  }, [initialZoomApplied, setViewport, getViewport, nodes]); 
+  const nodesRef = useRef(nodes); 
 
-
-  const nodesRef = useRef(nodes); // Create a ref to hold the latest nodes state
-
-  // Update the ref whenever 'nodes' state changes
   useEffect(() => {
     nodesRef.current = nodes;
   }, [nodes]);
 
-
    const onNodeClick = useCallback((_event, node) => {
-    // Close all other editors first for a cleaner UX
     setShowStartEditor(false);
     setSelectedDefaultNode(null);
     setShowInteractiveEditor(false);
@@ -120,7 +96,7 @@ function FlowBuilder() {
     setSelectedProductSectionNode(null);
     setSelectedProductNode(null);
     setSelectedSingleProductNode(null);
-    setSelectedConditionNode(null); // Close condition editor
+    setSelectedConditionNode(null); 
 
 
     switch (node.type) {
@@ -175,7 +151,6 @@ function FlowBuilder() {
     }
   }, []);
 
-  // Handler for saving DefaultNodeEditor content
   const handleSaveDefaultNodeContent = useCallback((nodeId, content) => {
     console.log(`Saving DefaultNode content for ${nodeId}:`, content);
     setNodeContentMap(prev => ({
@@ -199,7 +174,6 @@ function FlowBuilder() {
     );
   }, [setNodes, setNodeContentMap]);
 
-  // Unified handler for saving content for interactive, button, list, ecommerce, etc.
   const handleSaveNodeContent = useCallback((nodeId, content) => {
     setNodeContentMap(prev => ({
       ...prev,
@@ -336,9 +310,7 @@ function FlowBuilder() {
 
     setNodes((nds) => [...nds, ...newNodes]);
     setEdges((eds) => [...eds, ...newEdges]);
-  }, [nodes, setNodes, setEdges]); // Removed nodeContentMap from dependencies here
-
-  // FlowBuilder.js - relevant part of handleSubscribeToListMessage
+  }, [nodes, setNodes, setEdges]); 
 
   const handleSubscribeToListMessage = useCallback((interactiveNodeId) => {
     const interactiveNode = nodes.find(node => node.id === interactiveNodeId);
@@ -664,6 +636,7 @@ function FlowBuilder() {
       })
     );
   }, [setNodes]);
+
   const handleSaveSectionContent = useCallback((nodeId, newContent) => {
     setNodes((nds) =>
       nds.map((node) => {
@@ -683,7 +656,6 @@ function FlowBuilder() {
   }, [setNodes]);
 
   const handleSaveRowContent = useCallback((nodeId, content) => {
-    // This is crucial: Use nodeId to find and update the correct node
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
@@ -719,7 +691,6 @@ function FlowBuilder() {
   }, [setNodes]);
 
   const handleSaveProductContent = useCallback((nodeId, content) => {
-    // This is crucial: Use nodeId to find and update the correct node
     setNodes((nds) =>
       nds.map((node) =>
         node.id === nodeId
@@ -764,12 +735,57 @@ function FlowBuilder() {
     );
   }, [savedStartBotData, setNodes]);
 
+ 
   const onConnect = useCallback(
     (params) => {
+      // Rule 1: Prevent self-connections
+      if (params.source === params.target) {
+        toast.error("A node cannot connect to itself!", { position: "top-right" });
+        return;
+      }
+
+     // Rule 2: A node can only have one outgoing connection in total
+    // Check if any edge already exists where the source is the current params.source node
+    const hasExistingOutgoingConnection = edges.some(
+      (edge) => edge.source === params.source
+    );
+
+    if (hasExistingOutgoingConnection) {
+      toast.error("Node can only have one outgoing connection!", { position: "top-right" });
+      return;
+    }
+
+      const sourceNode = nodes.find((node) => node.id === params.source);
+      const targetNode = nodes.find((node) => node.id === params.target);
+
+   
+      if (sourceNode?.type === 'startBot' && sourceNode.data.connected) {
+        toast.error("Start Bot node can only connect to one node!", { position: "top-center" });
+        return;
+      }
+
+      if (targetNode?.type === 'sequenceNode' && params.targetHandle === 'subscribe-target') {
+        if (sourceNode?.type === 'buttonNode' && params.sourceHandle === 'next-step') {
+        } else {
+          toast.error("Sequence node can only connect from a Button node", { position: "top-right" });
+          return;
+        }
+      }
+
       setEdges((eds) => addEdge(params, eds));
+      if (sourceNode?.type === 'startBot') {
+        setNodes((nds) =>
+          nds.map((node) =>
+            node.id === sourceNode.id
+              ? { ...node, data: { ...node.data, connected: true } }
+              : node
+          )
+        );
+      }
     },
-    [setEdges]
+    [setEdges, nodes, edges] // Add 'edges' to dependencies so you can check existing connections
   );
+
 
   const onDrop = useCallback(
     (event) => {
@@ -864,6 +880,7 @@ function FlowBuilder() {
   const openStartBotEditor = () => setShowStartEditor(true);
   const closeStartBotEditor = () => setShowStartEditor(false);
   const closeDefaultNodeEditor = () => setSelectedDefaultNode(null);
+ 
   const updatedNodes = nodes.map((node) =>
     node.type === 'startBot'
       ? { ...node, data: { ...node.data, savedData: savedStartBotData, openEditor: openStartBotEditor } }
@@ -1171,6 +1188,7 @@ function FlowBuilder() {
           onDrop={onDrop}
           onDragOver={onDragOver}
           onNodeClick={onNodeClick}
+          //  onEdgesDelete={onEdgesDelete} 
           nodeTypes={nodeTypes}
         // fitView
         >
@@ -1302,6 +1320,7 @@ function FlowBuilder() {
           }}
         />
       )}
+    <ToastContainer />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 const ConditionNode = React.memo(({ id, data }) => {
@@ -7,6 +7,10 @@ const ConditionNode = React.memo(({ id, data }) => {
   const content = data.content || {}; // Ensure content is an object, default to empty if null/undefined
 
   const [showClose, setShowClose] = useState(false);
+  const updateNodeInternals = useUpdateNodeInternals();
+   useEffect(() => {
+      updateNodeInternals(id); // <--- Call this with the node's ID
+    }, [data.content, data.label, updateNodeInternals, id]);
 
   // Right-click handler
   const handleContextMenu = (e) => {
@@ -18,7 +22,7 @@ const ConditionNode = React.memo(({ id, data }) => {
   const handleNodeClick = (e) => {
     // Only trigger edit if not clicking the close button
     if (!e.target.closest('.close-box')) {
-      onEditConditionNode();
+      onEditConditionNode(id);
     }
   };
 
@@ -36,10 +40,6 @@ const ConditionNode = React.memo(({ id, data }) => {
         {fields.map((field, idx) => (
           (field.variable && field.operator) && ( // Only render if variable and operator are selected
             <p key={field.id || idx} style={{ fontSize: '8px', margin: 0 }}>
-              {/* Display logical operator only if it's not the first condition and there's more than one field */}
-              {idx > 0 && fields.length > 1 && (
-                <span style={{ color: 'black', marginRight: '3px' }}>{logicalOperator} </span>
-              )}
               <span style={{ color: 'blue' }}>if </span>
               <span >{field.variable} </span>
               <span style={{ color: 'red' }}>{field.operator} </span>
