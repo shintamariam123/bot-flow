@@ -50,7 +50,7 @@ const ButtonNode = React.memo(({ data, id, }) => {
             className={`content ${showClose ? 'node-highlighted' : ''}`}
             style={{ width: '100%', position: 'relative' }}
             onContextMenu={handleContextMenu} // show close on right click
-            onClick={handleNodeClick} // Unified click handler for the node body
+            // Unified click handler for the node body
         >
             {showClose && (
                 <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
@@ -151,24 +151,14 @@ const ButtonNode = React.memo(({ data, id, }) => {
                         )}
                     </div>
                 ) : (
-                    // Display "Click to add content" only when content is empty
                     <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-                        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }}  onClick={handleNodeClick}/>
                     </div>
                 )}
             </div>
 
             <div className="dotted-line mt-2" />
-            {/* <div className="px-2 footer mt-3 d-flex align-self-end">
-                <p>Message</p>
-            </div>
-            <Handle type="target" position={Position.Bottom} id="button-target" style={{
-                right: 'auto', left: 0, bottom: 20, width: 10,
-                height: 10,
-                borderRadius: '50%',    // Circle
-                background: 'white',
-                border: '1px solid grey'
-            }} /> */}
+          
             <div className='container mt-5'>
              <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>
                                      Message

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const InteractiveNode = React.memo(({ id, data }) => {
   const { onRemoveNode, onEditInteractiveNode, onCloseInteractiveEditor, spawnConnectedNode, content } = data;
@@ -45,7 +47,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
         className={`content ${showClose ? 'node-highlighted' : ''}`}
         style={{ width: '100%', position: 'relative' }}
         onContextMenu={handleContextMenu} // show close on right click
-        onClick={handleNodeClick} // Handle both hiding close and opening editor
+      // Handle both hiding close and opening editor
       >
         {showClose && (
           <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
@@ -137,22 +139,23 @@ const InteractiveNode = React.memo(({ id, data }) => {
             </div>
           ) : (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
-            </div>
+              {/* <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' onClick={handleNodeClick} style={{ cursor: 'pointer' }} /> */}
+              <FontAwesomeIcon icon={faHandPointer}  onClick={handleNodeClick} style={{cursor:'pointer'}} />       
+             </div>
           )}
         </div>
 
-        <div style={{borderBottom:'1rem'}}  className="dotted-line " />
-       
+        <div style={{ borderBottom: '1rem' }} className="dotted-line " />
 
-        <div className='container'  style={{
-                        position: 'relative', // IMPORTANT: For absolute positioning of handles within this div
-                        height: 'auto', // Let content define height
-                        minHeight: '70px', // Give some minimum height for spacing
-                        padding: '10px 0', // Add some padding
-                        width: '100%',
-                    }}>
-          <div  style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
+
+        <div className='container' style={{
+          position: 'relative', // IMPORTANT: For absolute positioning of handles within this div
+          height: 'auto', // Let content define height
+          minHeight: '70px', // Give some minimum height for spacing
+          padding: '10px 0', // Add some padding
+          width: '100%',
+        }}>
+          <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
             Reply
             <Handle
               type="target"

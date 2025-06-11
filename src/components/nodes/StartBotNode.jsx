@@ -3,6 +3,8 @@ import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 const StartBotNode = React.memo(({ data}) => {
+
+    const isConnectable = !data.connected;
     const handleCursorIconClick = (e) => {
         // Stop propagation to prevent any parent click handlers from firing
         e.stopPropagation();
@@ -63,7 +65,7 @@ const StartBotNode = React.memo(({ data}) => {
             <div className='px-2 footer mt-2 d-flex align-self-end'>
                 <p className='ms-auto'>Compose Next Message</p>
             </div>
-            <Handle type="source" position={Position.Bottom} style={{
+            <Handle id="a"  isConnectable={isConnectable}  type="source" position={Position.Bottom} style={{
                 left: 'auto', right: -10, bottom: 20,
                 width: 10,
                 height: 10,
