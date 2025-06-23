@@ -15,7 +15,7 @@ const nodeTypes = [
   { type: 'Interactive', icon: 'material-symbols:interactive-space', color: 'red' },
   { type: 'Condition', icon: 'ic:baseline-greater-than-equal', color: 'blue' },
   { type: 'Sequence', icon: 'ri:message-2-line', color: 'black' },
-  { type: 'StackOverflow', icon: 'devicon:stackoverflow', color: 'brown' },
+  { type: 'UserInputFlow', icon: 'devicon:stackoverflow', color: 'brown' },
   { type: 'Template', icon: 'vscode-icons:folder-type-template-opened', color: 'orange' },
 ];
 
@@ -119,7 +119,9 @@ const Toolbar = ({
       nodeType = type.toLowerCase() + 'Node';
     } else if (type === 'Condition') {
       nodeType = 'conditionNode';
-    } else {
+    } else if (type === 'UserInputFlow') {
+      nodeType = 'userInputFlowNode';
+    }  else {
       nodeType = 'defaultNode'; // Default only if no other type matches
     }
 

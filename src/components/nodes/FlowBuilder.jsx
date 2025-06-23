@@ -33,6 +33,11 @@ import ConditionNode from './ConditionNode';
 import ConditionEditor from '../editors/ConditionEditor';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import UserInputFlowNode from './UserInputFlowNode';
+import UserInputFlowEditor from '../editors/UserInputFlowEditor';
+import QuestionNode from './QuestionNode';
+import QuestionEditor from '../editors/QuestionEditor';
+
 
 let id = 1;
 const getId = () => `node_${id++}`;
@@ -65,6 +70,8 @@ function FlowBuilder() {
   const [selectedSingleProductNode, setSelectedSingleProductNode] = useState(null);
   const [initialZoomApplied, setInitialZoomApplied] = useState(false);
   const [selectedConditionNode, setSelectedConditionNode] = useState(null);
+  const [selectedUserInputFlowNode, setSelectedUserInputFlowNode] = useState(null);
+
 
   useEffect(() => {
     if (!initialZoomApplied && getViewport()) {
@@ -97,14 +104,17 @@ function FlowBuilder() {
     setSelectedProductNode(null);
     setSelectedSingleProductNode(null);
     setSelectedConditionNode(null); 
-
-
+    setSelectedUserInputFlowNode(null);
     switch (node.type) {
       case 'defaultNode':
         setSelectedDefaultNode(node);
         break;
       case 'conditionNode':
         setSelectedConditionNode(node);
+        break;
+         case 'questionNode':
+        setSelectedNode(node);
+        setEditorType('questionNode');
         break;
       case 'buttonNode':
         setSelectedNode(node);
@@ -145,6 +155,9 @@ function FlowBuilder() {
         break;
       case 'singleProductNode':
         setSelectedSingleProductNode(node);
+        break;
+         case 'userInputFlowNode':
+        setSelectedUserInputFlowNode(node);
         break;
       default:
         break;
@@ -239,7 +252,10 @@ function FlowBuilder() {
      if (selectedConditionNode && selectedConditionNode.id === nodeId) {
       setSelectedConditionNode(null);
     }
-  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode,selectedConditionNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode, selectedProductSectionNode, selectedProductNode]);
+    if (selectedUserInputFlowNode && selectedUserInputFlowNode.id === nodeId) {
+      setSelectedUserInputFlowNode(null);
+    }
+  }, [setNodes, setEdges, setNodeContentMap, selectedDefaultNode,selectedConditionNode, activeInteractiveNodeId, selectedNode, selectedSequenceNode, selectedSendMessageNode, selectedSectionNode, selectedRowSectionNode, selectedProductSectionNode, selectedProductNode, selectedUserInputFlowNode]);
 
   const handleSubscribeToSequence = useCallback((buttonNodeId) => {
     const buttonNode = nodes.find(node => node.id === buttonNodeId);
@@ -636,6 +652,23 @@ function FlowBuilder() {
       })
     );
   }, [setNodes]);
+    const handleSaveUserInputFlowContent = useCallback((nodeId, newContent) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          // Return a new node object with updated data.content
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              content: newContent, // <--- UPDATE THE CONTENT HERE
+            },
+          };
+        }
+        return node;
+      })
+    );
+  }, [setNodes]);
 
   const handleSaveSectionContent = useCallback((nodeId, newContent) => {
     setNodes((nds) =>
@@ -724,7 +757,6 @@ function FlowBuilder() {
     );
   }, [setNodes]);
 
-
   useEffect(() => {
     setNodes((nds) =>
       nds.map((node) =>
@@ -735,7 +767,6 @@ function FlowBuilder() {
     );
   }, [savedStartBotData, setNodes]);
 
- 
   const onConnect = useCallback(
     (params) => {
       // Rule 1: Prevent self-connections
@@ -862,8 +893,10 @@ function FlowBuilder() {
             },
             onCloseInteractiveEditor: () => setShowInteractiveEditor(false), // A more specific close handler
             spawnConnectedNode: spawnConnectedNode,
-            onEditConditionNode: (id) => setSelectedConditionNode(nodesRef.current.find(n => n.id === id)), // Pass this for new ConditionNodes from drag and drop
-            onCloseConditionEditor: () => setSelectedConditionNode(null), // Pass this for new ConditionNodes from drag and drop
+            onEditConditionNode: (id) => setSelectedConditionNode(nodesRef.current.find(n => n.id === id)),
+            onCloseConditionEditor: () => setSelectedConditionNode(null), 
+             onEditUserInputFlowNode: (id) => setSelectedUserInputFlowNode(nodesRef.current.find(n => n.id === id)),
+            onCloseUserInputFlowEditor: () => setSelectedUserInputFlowNode(null), 
           },
         };
         setNodes((nds) => nds.concat(newNode));
@@ -908,6 +941,17 @@ function FlowBuilder() {
           setSelectedConditionNode(nodeProps);
         }}
         onCloseConditionEditor={() => setSelectedConditionNode(null)}
+       />
+    ),
+     userInputFlowNode: (nodeProps) => (
+      <UserInputFlowNode
+        {...nodeProps}
+        onRemoveNode={onRemoveNode}
+        onEditUserInputFlowNode={() => {
+         
+          setSelectedUserInputFlowNode(nodeProps);
+        }}
+        onCloseUserInputFlowEditor={() => setSelectedUserInputFlowNode(null)}
        />
     ),
     sequenceNode: (nodeProps) => (
@@ -1229,6 +1273,14 @@ function FlowBuilder() {
           content={selectedConditionNode.data?.content || {}} // Access content directly from selectedConditionNode
           onSave={handleSaveConditionContent}
           onClose={() => setSelectedConditionNode(null)}
+        />
+      )}
+       {selectedUserInputFlowNode && (
+        <UserInputFlowEditor
+        node={selectedUserInputFlowNode}
+          content={selectedUserInputFlowNode.data?.content || {}} // Access content directly from selectedConditionNode
+          onSave={handleSaveUserInputFlowContent}
+          onClose={() => setSelectedUserInputFlowNode(null)}
         />
       )}
       {selectedSequenceNode && (
