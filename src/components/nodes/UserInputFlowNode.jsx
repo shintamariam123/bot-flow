@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useCallback} from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
 
 const UserInputFlowNode = React.memo(({ id, data }) => {
-    const { onRemoveNode, onEditUserInputFlowNode, onCloseUserInputFlowEditor } = data;
+    const { onRemoveNode, onEditUserInputFlowNode, onCloseUserInputFlowEditor, spawnConnectedNode } = data;
     const content = data.content || {}; // Ensure content is an object, default to empty if null/undefined
 
     const [showClose, setShowClose] = useState(false);
@@ -25,6 +25,13 @@ const UserInputFlowNode = React.memo(({ id, data }) => {
             onEditUserInputFlowNode(id);
         }
     };
+      const handleQuestionHandleClick = useCallback((e) => {
+        e.stopPropagation(); // Prevent onNodeClick from firing
+        if (spawnConnectedNode) {
+            console.log('handleQuestionHandleClick triggered', id);
+            spawnConnectedNode(id, 'question', 'question'); // sourceId, sourceHandleId, type of node to spawn
+        }
+    }, [id, spawnConnectedNode]);
 
     // Effect to hide close button after some time if node is not interacted with
     useEffect(() => {
@@ -149,8 +156,10 @@ const UserInputFlowNode = React.memo(({ id, data }) => {
                     </div>
                     <div style={{ position: 'absolute', right: 10, bottom: 15, fontSize: '6px', cursor: 'pointer' }}
                     >
-                        First Question
-                        <Handle type="source" position={Position.Right} id="first" style={{ // Changed id from "ecommerce" to "false"
+                       First Question
+                        <Handle type="source" position={Position.Right} id="question"
+                         onClick={handleQuestionHandleClick}
+                          style={{ // Changed id from "ecommerce" to "false"
                             left: 'auto', right: -10, bottom: 5, width: 10,
                             height: 10, borderRadius: '50%', background: 'white', border: '1px solid grey'
                         }} />

@@ -11,14 +11,23 @@
      /* overflow: hidden; */
   position: relative;
 }
-/* Ensures edges (on the pane) render above nodes */
-.react-flow__pane {
-    z-index: 2; /* Or any value higher than your node's z-index */
+.react-flow__handle {
+  background: #eee;
+  border: 1px solid #777; 
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; 
 }
 
-/* Ensures nodes stay below the edges, but still visible */
+.react-flow__handle:hover {
+  background: black !important; 
+  border-color: black !important;
+}
+
+.react-flow__pane {
+    z-index: 2;
+}
+
 .react-flow__node {
-    z-index: 1; /* A value lower than the pane's z-index */
+    z-index: 1; 
 }
 
 .button-div {
@@ -334,4 +343,37 @@ color: #fff !important;
   box-shadow: 0 0 8px 3px green;
   border-radius: 8px;
   transition: box-shadow 0.3s ease;
+}
+
+/* TemplateEditor.css */
+
+.file-upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background-color: #f9f9f9;
+    color: #666;
+}
+
+.file-upload-area:hover {
+    border-color: #007bff; /* Blue on hover */
+    background-color: #e9f5ff;
+    color: #333;
+}
+
+.file-upload-area strong {
+    color: #007bff;
+}
+
+.file-upload-area.drag-over {
+    border-color: #28a745; /* Green when dragging over */
+    background-color: #e6ffe6;
+}
+
+.file-upload-area p {
+    margin: 0;
+    font-size: 1.1rem;
 }

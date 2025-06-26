@@ -129,6 +129,42 @@
                 "Contact Details"
             ],
             "button_count": 3
+        },
+        {
+            "id": 831,
+            "template_name": "product_detail",
+            "header_type": "IMAGE",
+            "custom_count": 2,
+            "button_type": "",
+            "buttons": [],
+            "button_count": 0
+        },
+        {
+            "id": 960,
+            "template_name": "wel_doc",
+            "header_type": "DOCUMENT",
+            "custom_count": 0,
+            "button_type": "",
+            "buttons": [],
+            "button_count": 0
+        },
+        {
+            "id": 961,
+            "template_name": "welcome_gem_doc",
+            "header_type": "DOCUMENT",
+            "custom_count": 0,
+            "button_type": "",
+            "buttons": [],
+            "button_count": 0
+        },
+        {
+            "id": 979,
+            "template_name": "erp_bg",
+            "header_type": "IMAGE",
+            "custom_count": 0,
+            "button_type": "",
+            "buttons": [],
+            "button_count": 0
         }
     ]
 }
