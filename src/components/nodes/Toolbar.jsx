@@ -121,7 +121,9 @@ const Toolbar = ({
       nodeType = 'conditionNode';
     } else if (type === 'UserInputFlow') {
       nodeType = 'userInputFlowNode';
-    }  else {
+    } else if (type === 'Template') {
+      nodeType = 'templateNode';
+    }else {
       nodeType = 'defaultNode'; // Default only if no other type matches
     }
 

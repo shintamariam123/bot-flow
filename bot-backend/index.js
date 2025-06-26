@@ -11,9 +11,6 @@ const botServer = express()
 
 //use cors in express server
 botServer.use(cors())
-// ✅ Set higher limit for JSON and URL-encoded payloads
-// botServer.use(express.json({ limit: '50mb' }));
-// botServer.use(express.urlencoded({ extended: true, limit: '50mb' }));botServer.use(router)
 botServer.use(express.json())
 botServer.use(router)
 botServer.use('/uploads',express.static('./uploads'))
