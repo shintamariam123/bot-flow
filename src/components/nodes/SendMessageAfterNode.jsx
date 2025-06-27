@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 // Wrap the component with React.memo
 const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMessageNode }) => {
@@ -28,10 +30,14 @@ const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMes
   };
 
   const handleThumbIconClick = (e) => {
-    e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
-    if (onEditSendMessageNode) {
-      onEditSendMessageNode(id); // Call the passed function
+    if (showClose) {
+      setShowClose(false);
+    } else {
+      if (onEditSendMessageNode) {
+        onEditSendMessageNode(id); // Call the passed function
+      }
     }
+
   };
 
   return (
@@ -105,8 +111,8 @@ const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMes
               </div>
             </>
           ) : (
-            <div onClick={handleThumbIconClick}>
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+            <div >
+              <FontAwesomeIcon onClick={handleThumbIconClick} icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )
         }

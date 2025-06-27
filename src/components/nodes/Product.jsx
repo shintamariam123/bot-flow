@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const Product = React.memo(({ data, id, onRemoveNode, onEditProductNode }) => {
 
@@ -25,10 +27,15 @@ const Product = React.memo(({ data, id, onRemoveNode, onEditProductNode }) => {
     };
 
     const handleThumbIconClick = (e) => {
-        e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
+         if (showClose) {
+      setShowClose(false);
+    }else{
+//  e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
         if (onEditProductNode) {
             onEditProductNode(id); // Call the passed function
         }
+    }
+       
     };
 
     return (
@@ -57,7 +64,7 @@ const Product = React.memo(({ data, id, onRemoveNode, onEditProductNode }) => {
 
                 <div className="d-flex align-self-start align-items-center gap-1 mb-3 p-2">
                     <Icon icon='material-symbols:table-rows-rounded' width="10" height="10" />
-                    <p className="default-heading mb-0">Product</p>
+                    <p className="default-heading mb-0">Products</p>
                 </div>
                 <div className="d-flex bot_flow p-1" style={{ marginBottom: '0px' }}>
                     <Icon icon="hugeicons:sent" width="8" height="8" color="blue" />
@@ -95,8 +102,8 @@ const Product = React.memo(({ data, id, onRemoveNode, onEditProductNode }) => {
 
                         </div>
                     ) : (
-                        <div onClick={handleThumbIconClick}>
-                            <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                        <div >
+                            <FontAwesomeIcon onClick={handleThumbIconClick} icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
                         </div>
                     )}
 

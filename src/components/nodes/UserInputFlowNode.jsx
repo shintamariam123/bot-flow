@@ -1,6 +1,8 @@
 import React, { useState, useEffect ,useCallback} from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const UserInputFlowNode = React.memo(({ id, data }) => {
     const { onRemoveNode, onEditUserInputFlowNode, onCloseUserInputFlowEditor, spawnConnectedNode } = data;
@@ -127,7 +129,7 @@ const UserInputFlowNode = React.memo(({ id, data }) => {
                         ) :
                         (
                             <div className="d-flex justify-content-center align-items-center">
-                                <Icon onClick={handleNodeClick} icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                                <FontAwesomeIcon onClick={handleNodeClick} icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
                             </div>
                         )}
 

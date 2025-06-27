@@ -24,8 +24,7 @@ const InteractiveNode = React.memo(({ id, data }) => {
 
   // Click handler for the whole node
   const handleNodeClick = (e) => {
-    // If the close button is showing, clicking the node body should hide it.
-    // Otherwise, it should open the editor.
+
     if (showClose) {
       setShowClose(false);
     } else {

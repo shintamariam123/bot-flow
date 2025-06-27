@@ -1,6 +1,8 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const StartBotNode = React.memo(({ data}) => {
 
@@ -50,8 +52,8 @@ const StartBotNode = React.memo(({ data}) => {
                 ) : (
                     <div>
                         {/* Ensure this is the ONLY element with an onClick handler that opens the editor */}
-                        <Icon
-                            icon="mdi:cursor-pointer"
+                        <FontAwesomeIcon
+                            icon={faHandPointer}
                             width="20"
                             height="20"
                             color='black'

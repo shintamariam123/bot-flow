@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 // Wrap the component with React.memo
 const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode }) => {
@@ -31,10 +33,14 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
     };
 
     const handleThumbIconClick = (e) => {
-        e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
-        if (onEditSequenceNode) {
-            onEditSequenceNode(id); // Call the passed function
+        if (showClose) {
+            setShowClose(false);
+        } else {
+            if (onEditSequenceNode) {
+                onEditSequenceNode(id); // Call the passed function
+            }
         }
+
     };
 
     return (
@@ -113,8 +119,8 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
                         </div>
                     ) :
                     (
-                        <div onClick={handleThumbIconClick}>
-                            <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+                        <div>
+                            <FontAwesomeIcon onClick={handleThumbIconClick} icon={faHandPointer} width="25" height="25" color='black' style={{ cursor: 'pointer' }} />
                         </div>
                     )
                 }
@@ -122,10 +128,10 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
 
             <div className="dotted-line mt-3 " />
 
-          
 
-             <div className='container mt-5'>
-                <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingLeft: '13px' }}>
+
+            <div className='container mt-5'>
+                <div style={{ position: 'absolute', left: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingLeft: '13px' }}>
                     Schedule Sequence <br /> Message
                     <Handle
                         type="target"
@@ -138,8 +144,8 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
                     />
                 </div>
 
-            {/* Source Handle: Schedule Sequence Message */}
-                <div style={{ position: 'absolute', right: 0, bottom: 20, fontSize: '6px', cursor: 'pointer',paddingRight: '15px' }}>
+                {/* Source Handle: Schedule Sequence Message */}
+                <div style={{ position: 'absolute', right: 0, bottom: 20, fontSize: '6px', cursor: 'pointer', paddingRight: '15px' }}>
                     Schedule Sequence <br /> Message
                     <Handle
                         type="source"

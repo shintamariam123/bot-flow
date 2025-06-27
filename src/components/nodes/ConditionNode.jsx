@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const ConditionNode = React.memo(({ id, data }) => {
   const { onRemoveNode, onEditConditionNode, onCloseConditionEditor } = data;
@@ -142,7 +144,7 @@ const ConditionNode = React.memo(({ id, data }) => {
             </div>
           ) : (
             <div className="d-flex justify-content-center align-items-center mt-2 mb-2">
-              <Icon onClick={handleNodeClick} icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+              <FontAwesomeIcon onClick={handleNodeClick} icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )}
         </div>

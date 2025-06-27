@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { Icon } from '@iconify/react';
 import { Handle, Position } from '@xyflow/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const QuestionNode = React.memo(({ data, id, }) => {
     const { onEditQuestionNode, onRemoveNode, spawnConnectedNode } = data
@@ -136,7 +138,7 @@ const QuestionNode = React.memo(({ data, id, }) => {
                         </>
                     ) : (
                         <div className="d-flex justify-content-center align-items-center" style={{ height: '50px' }}>
-                            <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} onClick={handleNodeClick} />
+                            <FontAwesomeIcon icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }} onClick={handleNodeClick} />
                         </div>
                     )}
 
