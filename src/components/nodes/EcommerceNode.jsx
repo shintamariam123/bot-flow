@@ -1,7 +1,8 @@
 // ButtonNode.jsx
 import React, { useState, useCallback } from 'react';
 import { Icon } from '@iconify/react';
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 import { Handle, Position } from '@xyflow/react';
 
 const EcommerceNode = React.memo(({ data, id }) => {
@@ -105,7 +106,7 @@ const EcommerceNode = React.memo(({ data, id }) => {
                     </div>
                 ) : (
                     <div>
-                        <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }}
+                        <FontAwesomeIcon icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }}
                             onClick={() => {
                                 if (onEditEcommerceNode && id) {
                                     onEditEcommerceNode(id);  // Trigger the editor

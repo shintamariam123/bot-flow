@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
 
 const RowSection = React.memo(({ data, id, onRemoveNode, onEditRowSectionNode }) => {
 
@@ -25,10 +27,15 @@ const RowSection = React.memo(({ data, id, onRemoveNode, onEditRowSectionNode })
   };
 
   const handleThumbIconClick = (e) => {
-    e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
-    if (onEditRowSectionNode) {
+     if (showClose) {
+      setShowClose(false);
+    } else{
+ if (onEditRowSectionNode) {
       onEditRowSectionNode(id); // Call the passed function
     }
+    }
+    // e.stopPropagation(); // Prevent onNodeClick from firing simultaneously
+   
   };
 
   return (
@@ -97,8 +104,8 @@ const RowSection = React.memo(({ data, id, onRemoveNode, onEditRowSectionNode })
 
             </div>
           ) : (
-            <div onClick={handleThumbIconClick}>
-              <Icon icon="mdi:cursor-pointer" width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
+            <div >
+              <FontAwesomeIcon onClick={handleThumbIconClick} icon={faHandPointer} width="20" height="20" color='black' style={{ cursor: 'pointer' }} />
             </div>
           )}
 

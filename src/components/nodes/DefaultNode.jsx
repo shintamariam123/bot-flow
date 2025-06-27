@@ -1,6 +1,8 @@
 import React, { useState, memo, useEffect } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
 import { Icon } from '@iconify/react';
+import { faHandPointer } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
   const content = data.content;
@@ -28,19 +30,24 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
     console.log(`DefaultNode ${id}: Right-clicked to show close icon.`);
   };
 
-  const handleNodeClick = () => { 
+  const handleCursorIconClick = () => {
     if (showClose) {
       setShowClose(false);
+    } else {
+      if (e.type === 'click' && e.button === 0) {
+        console.log(`DefaultNode ${id}: Cursor icon clicked. Calling onEditDefaultNode.`);
+        onEditDefaultNode(id);
+      }
     }
   };
 
-  const handleCursorIconClick = (e) => {
-    e.stopPropagation(); 
-    if (onEditDefaultNode) {
-      console.log(`DefaultNode ${id}: Cursor icon clicked. Calling onEditDefaultNode.`);
-      onEditDefaultNode(id); 
-    }
-  };
+  // const handleCursorIconClick = (e) => {
+  //   e.stopPropagation(); 
+  //   if (onEditDefaultNode) {
+  //     console.log(`DefaultNode ${id}: Cursor icon clicked. Calling onEditDefaultNode.`);
+  //     onEditDefaultNode(id); 
+  //   }
+  // };
 
   const renderContent = () => {
     const shouldShowCursorIcon =
@@ -56,12 +63,9 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
     if (shouldShowCursorIcon) {
       return (
         // Add onClick directly to the Icon when it's rendered
-        <Icon
-          icon="mdi:cursor-pointer"
-          width="20"
-          height="20"
-          color='black'
-          style={{ cursor: 'pointer' }}
+        <FontAwesomeIcon
+          icon={faHandPointer}
+          style={{ cursor: 'pointer' ,width:'20',height:'20'}}
           onClick={handleCursorIconClick} // <-- This is the crucial change
         />
       );
@@ -82,7 +86,7 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
                 <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span> </p>
               </div>
             )}
-           
+
           </div>
         );
       case 'Image':
@@ -255,7 +259,7 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
       className={`content ${showClose ? 'node-highlighted' : ''}`}
       style={{ width: '100%', position: 'relative' }}
       onContextMenu={handleContextMenu}
-      onClick={handleNodeClick} // Node click for general node behavior (e.g., hiding close button)
+    // Node click for general node behavior (e.g., hiding close button)
     >
       {showClose && (
         <div className={`close-box ${showClose ? 'node-highlighted' : ''}`}
