@@ -41,7 +41,7 @@ function SendMessageAfterEditor({ node, content, onSave, onClose }) {
       scheduleForDay: isDailySequenceEnabled ? scheduleForDay : null,
     };
     console.log("Saved Sequence Editor Data:", savedData);
-    onSave(savedData);
+    onSave(node.id, savedData);
   };
 
   const timeOptions = [

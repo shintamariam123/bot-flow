@@ -12,7 +12,7 @@ const botServer = express()
 //use cors in express server
 botServer.use(cors())
 botServer.use(express.json())
-botServer.use(router)
+botServer.use('/api', router)
 botServer.use('/uploads',express.static('./uploads'))
 
 const PORT = 3000 || process.env.PORT

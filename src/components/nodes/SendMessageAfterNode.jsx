@@ -15,6 +15,8 @@ const SendMessageAfterNode = React.memo(({ data, id, onRemoveNode, onEditSendMes
   useEffect(() => {
     if (data.content) {
       setDisplayedContent(data.content);
+    }else{
+      setDisplayedContent({})
     }
   }, [data.content]); // Dependency array: re-run when data.content changes
 

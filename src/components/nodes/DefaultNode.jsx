@@ -41,14 +41,6 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
     }
   };
 
-  // const handleCursorIconClick = (e) => {
-  //   e.stopPropagation(); 
-  //   if (onEditDefaultNode) {
-  //     console.log(`DefaultNode ${id}: Cursor icon clicked. Calling onEditDefaultNode.`);
-  //     onEditDefaultNode(id); 
-  //   }
-  // };
-
   const renderContent = () => {
     const shouldShowCursorIcon =
       !content || Object.keys(content).length === 0 ||
@@ -62,7 +54,6 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
 
     if (shouldShowCursorIcon) {
       return (
-        // Add onClick directly to the Icon when it's rendered
         <FontAwesomeIcon
           icon={faHandPointer}
           style={{ cursor: 'pointer' ,width:'20',height:'20'}}
@@ -70,8 +61,6 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
         />
       );
     }
-
-    // If content exists, proceed with the switch case to render actual content
     switch (data.type) {
       case 'Text':
         return (
@@ -193,7 +182,7 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
             );
           }
         }
-        return null; // The icon is now handled by shouldShowCursorIcon
+        return null; 
       case 'Location':
         return (
           <div className='p-1 d-flex flex-column align-items-center w-100'>
@@ -207,7 +196,6 @@ const DefaultNode = memo(({ id, data, onRemoveNode, onEditDefaultNode }) => {
                 <p style={{ fontSize: '8px', margin: 0, color: "black" }}>Reply : <span style={{ color: 'black' }}>{content.text}</span> </p>
               </div>
             )}
-            {/* Redundant icon rendering here */}
           </div>
         );
       case 'Whatsapp':

@@ -41,21 +41,20 @@ function SequenceEditor({ node, content, onSave, onClose }) {
     }
   }, [node, content]);
 
-   const handleSave = () => {
-    // Create an object with all the data to be saved
-    const dataToSave = {
-      
-      campaignName: selectedCampaign,
-      deliveryTime: selectedDeliveryTime,
-      timeZone: selectedTimeZone,
+  const handleSave = () => {
+        const dataToSave = {
+            campaignName: selectedCampaign,
+            deliveryTime: selectedDeliveryTime,
+            timeZone: selectedTimeZone,
+        };
+
+        console.log("Saving Sequence Editor Data for node ID:", node.id, dataToSave);
+
+        // *** THIS IS THE CRUCIAL CHANGE ***
+        // Pass both node.id and dataToSave to the onSave function
+        onSave(node.id, dataToSave);
+        onClose(); // Close the editor after saving
     };
-
-    // Log the data to the console to verify
-    console.log("Saving Sequence Editor Data:", dataToSave);
-
-    // Call the onSave function passed from FlowBuilder with the data
-    onSave(dataToSave);
-  };
 
   if (!node) {
     return null;

@@ -15,8 +15,9 @@ export const saveOrUpdateMedia = (formData) =>
 // Get all bots
 export const getAllBots = () => API.get('/bots');
 
-// Get bot by title
-export const getBotByTitle = (title) => API.get(`/bots/${title}`);
+//edit bot by id
+// ** NEW: Get bot by ID **
+export const getBotById = (id) => API.get(`/bots/${id}`); // Changed to :id in the route
 
 // Delete bot by title
 export const deleteBotByTitle = (title) => API.delete(`/bots/${title}`);

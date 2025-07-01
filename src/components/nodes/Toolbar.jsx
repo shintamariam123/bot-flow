@@ -27,7 +27,7 @@ const Toolbar = ({
   setNodes,
   setEdges,
   setNodeContentMap,
-  setSavedStartBotData, onDashboardClick
+  setSavedStartBotData, onDashboardClick, currentBotId
 }) => {
 
   const [isSaving, setIsSaving] = useState(false);
@@ -35,8 +35,17 @@ const Toolbar = ({
   const handleSave = async () => {
     setIsSaving(true);
 
-    // 🧠 Enrich nodes with their respective data
     const enrichedNodes = nodes.map((node) => {
+       const contentFromMap = nodeContentMap[node.id];
+        if (contentFromMap) {
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          content: contentFromMap, // Always pull content from the map if available
+        },
+      };
+    }
       if (node.type === 'defaultNode') {
         const nodeData = nodeContentMap[node.id] || {};
         return {
@@ -63,6 +72,7 @@ const Toolbar = ({
 
     // 📦 Construct payload
     const botData = {
+       ...(currentBotId && { _id: currentBotId }),
       startBotTitle: savedStartBotData?.title || 'Untitled Bot',
       nodes: enrichedNodes,
       edges,

@@ -12,6 +12,8 @@ function App() {
 
         <Routes>
           <Route path="/" element={<FlowBuilder />} />
+           {/* NEW: Route for editing a bot, passing the botId as a URL parameter */}
+          <Route path="/edit/:botId" element={<FlowBuilder />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </ReactFlowProvider>

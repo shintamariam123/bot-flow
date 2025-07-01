@@ -12,12 +12,17 @@ const SequenceNode = React.memo(({ data, id, onRemoveNode, onEditSequenceNode })
     const updateNodeInternals = useUpdateNodeInternals();
 
 
-    useEffect(() => {
-        if (data.content) {
-            updateNodeInternals(id);
-            setDisplayedContent(data.content);
-        }
-    }, [data.content]); // Dependency array: re-run when data.content changes
+  // SequenceNode.jsx
+useEffect(() => {
+    if (data.content) {
+        updateNodeInternals(id); // Good for ensuring handles re-render if needed
+        setDisplayedContent(data.content);
+    } else {
+        // Optional: Reset if content becomes null/undefined, though typically
+        // data.content would retain its last saved state or be an empty object.
+        setDisplayedContent({});
+    }
+}, [data.content, id, updateNodeInternals]); // Added id and updateNodeInternals to deps
 
 
 
